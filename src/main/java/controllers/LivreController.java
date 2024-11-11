@@ -14,30 +14,35 @@ import java.util.stream.Stream;
 public class LivreController {
 	private static final String CSV_FILE = "C:/Eclipse/gestionbibli/src/main/java/database/books.csv";
     // Méthode pour lire les livres depuis le fichier CSV
-    public List<Livre> lireLivres() {
-        try (Stream<String> lines = Files.lines(Paths.get(CSV_FILE))) {
-            return lines
-                .map(line -> line.split(","))
-                .filter(attributes -> attributes.length >= 7) // Vérifie que la ligne a au moins 7 éléments
-                .map(attributes -> new Livre(
-                    attributes[0],
-                    attributes[1],
-                    attributes[2],
-                    attributes[3],
-                    Integer.parseInt(attributes[4]),
-                    Boolean.parseBoolean(attributes[5]),
-                    attributes[6]
-                ))
-                .collect(Collectors.toList());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return Collections.emptyList();
-        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-            System.err.println("Erreur de format dans le fichier CSV. Veuillez vérifier les données.");
-            e.printStackTrace();
-            return Collections.emptyList();
-        }
-    }
+
+	public List<Livre> lireLivres() {
+	    try (Stream<String> lines = Files.lines(Paths.get(CSV_FILE))) {
+	        return lines
+	            .map(line -> line.split(","))
+	            .filter(attributes -> attributes.length >= 7) // Vérifie que la ligne a au moins 7 éléments
+	            .map(attributes -> {
+	                try {
+	                    return new Livre(
+	                        attributes[0],
+	                        attributes[1],
+	                        attributes[2],
+	                        attributes[3],
+	                        Integer.parseInt(attributes[4]),
+	                        Boolean.parseBoolean(attributes[5]),
+	                        attributes[6]
+	                    );
+	                } catch (NumberFormatException e) {
+	                    System.err.println("Erreur de format pour la ligne : " + String.join(",", attributes));
+	                    return null; // Retourner null pour filtrer plus tard
+	                }
+	            })
+	            .filter(livre -> livre != null) // Filtrer les livres null
+	            .collect(Collectors.toList());
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return Collections.emptyList();
+	    }
+	}
 
  // Dans la méthode ajouterLivre
  public void ajouterLivre(Livre livre) {

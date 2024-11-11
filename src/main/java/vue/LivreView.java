@@ -15,7 +15,7 @@ public class LivreView extends JFrame {
     private static final long serialVersionUID = 1L;
     private LivreController livreController;
     private JButton addButton;
-    private static final String RESOURCE_PATH = "C:/Eclipse/GestionBibliothèque/src/ressources/";
+    private static final String RESOURCE_PATH = "C:/Eclipse/GestionBibli/src/ressources/";
     
     private JTextField searchField;
     private JCheckBox availableCheckBox;
