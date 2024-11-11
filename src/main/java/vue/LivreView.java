@@ -10,13 +10,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.io.File;
+import java.net.URL;
 
 public class LivreView extends JFrame {
     private static final long serialVersionUID = 1L;
     private LivreController livreController;
     private JButton addButton;
-    private static final String RESOURCE_PATH = "C:/Eclipse/GestionBibli/src/ressources/";
-    
     private JTextField searchField;
     private JCheckBox availableCheckBox;
     private JCheckBox borrowedCheckBox;
@@ -30,8 +29,9 @@ public class LivreView extends JFrame {
         getContentPane().setBackground(new Color(245, 245, 245));
 
         // Bouton d'ajout de livre
+     // Bouton d'ajout de livre
         addButton = new JButton("Ajouter Livre");
-        addButton.setIcon(resizeIcon(loadIcon(RESOURCE_PATH + "add-icon.png"), 20, 20));
+        addButton.setIcon(resizeIcon(loadIcon("/ressources/add-icon.png"), 20, 20)); // Charger et redimensionner l'icône
         addButton.setFocusPainted(false);
         addButton.setBackground(Color.decode("#004754"));
         addButton.setForeground(Color.WHITE);
@@ -61,6 +61,8 @@ public class LivreView extends JFrame {
 
         searchField = new JTextField(20);
         JButton searchButton = new JButton("Rechercher");
+        searchButton.setIcon(resizeIcon(loadIcon("/ressources/search-icon.png"), 20, 20)); // Charger et redimensionner l'icône
+        searchButton.addActionListener(e -> filterBooks());
         availableCheckBox = new JCheckBox("Disponibles");
         borrowedCheckBox = new JCheckBox("Empruntés");
 
@@ -214,7 +216,6 @@ public class LivreView extends JFrame {
 	    livreController.ajouterLivre(livre);
 	}
 	
-	
 	private void openEditBookDialog(Livre livre) {
 	    JDialog editDialog = new JDialog(this, "Modifier un Livre", true);
 	    editDialog.setSize(400, 600);
@@ -254,8 +255,8 @@ public class LivreView extends JFrame {
 	    
 	    // Utilisation d'une variable locale pour stocker le chemin de l'image
 	    String[] imagePath = new String[1]; // Utilisation d'un tableau pour que la variable soit modifiable dans le listener
-	    imagePath[0] = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty() ? livre.getImageUrl() : RESOURCE_PATH + "default-book.jpeg";
-	    couverturePreview.setIcon(resizeIcon(loadIcon(imagePath[0]), 100, 150));
+	    imagePath[0] = livre.getImageUrl(); // Utiliser l'URL de l'image existante
+	    couverturePreview.setIcon(resizeIcon(loadCoverImage(imagePath[0]), 100, 150)); // Afficher l'image existante
 
 	    couvertureButton.addActionListener(e -> {
 	        JFileChooser fileChooser = new JFileChooser();
@@ -284,7 +285,7 @@ public class LivreView extends JFrame {
 
 	                // Mettre à jour l'objet Livre
 	                livre.setTitre(titreField.getText());
-	                livre.setAuteur(auteurField .getText());
+	                livre.setAuteur(auteurField.getText());
 	                livre.setGenre((String) genreComboBox.getSelectedItem());
 	                livre.setAnneePublication(Integer.parseInt(anneeField.getText()));
 	                livre.setDisponible(disponibleCheckBox.isSelected());
@@ -355,81 +356,120 @@ public class LivreView extends JFrame {
         }
     }
 
-    private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
-        booksPanel.removeAll();
-
-        livres.stream().forEach(livre -> {
-            JPanel livrePanel = new JPanel();
-            livrePanel.setLayout(new BorderLayout());
-            livrePanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-            livrePanel.setBackground(new Color(255, 255, 255));
-            livrePanel.setPreferredSize(new Dimension(200, 300));
-
-            String imagePath = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty()
-                ? livre.getImageUrl()
-                : RESOURCE_PATH + "default-book.jpeg";
-            JLabel imageLabel = new JLabel(resizeIcon(loadIcon(imagePath), 120, 180));
-            livrePanel.add(imageLabel, BorderLayout.CENTER);
-
-            JPanel textPanel = new JPanel(new GridLayout(2, 1));
-            textPanel.setBackground(new Color(255, 255, 255));
-            JLabel titleLabel = new JLabel(livre.getTitre(), JLabel.CENTER);
-            titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
-            JLabel authorLabel = new JLabel(livre.getAuteur(), JLabel.CENTER);
-            textPanel.add(titleLabel);
-            textPanel.add(authorLabel);
-
-            livrePanel.add(textPanel, BorderLayout.SOUTH);
-
-            // Ajout des boutons Modifier et Supprimer
-            JPanel buttonPanel = new JPanel();
-            JButton editButton = new JButton("Modifier");
-            JButton deleteButton = new JButton("Supprimer");
-
-            editButton.addActionListener(e -> openEditBookDialog(livre));
-            deleteButton.addActionListener(e -> deleteBook(livre));
-
-            buttonPanel.add(editButton);
-            buttonPanel.add(deleteButton);
-            livrePanel.add(buttonPanel, BorderLayout.NORTH);
-
-            booksPanel.add(livrePanel);
-        });
-
-        booksPanel.revalidate();
-        booksPanel.repaint();
-    }
-
-    private ImageIcon loadIcon(String path) {
-        return new ImageIcon(path);
-    }
-
-    private ImageIcon resizeIcon(ImageIcon icon, int width, int height) {
-        Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        return new ImageIcon(img);
-    }
-
-    private void filterBooks() {
-        String searchText = searchField.getText().toLowerCase();
-        boolean showAvailable = availableCheckBox.isSelected();
-        boolean showBorrowed = borrowedCheckBox.isSelected();
-
-        List<Livre> livres = livreController.lireLivres();
-
-        List<Livre> filteredLivres = livres.stream()
-            .filter(livre -> {
-                boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchText) ||
-                                        livre.getAuteur().toLowerCase().contains(searchText) ||
-                                        livre.getGenre().toLowerCase().contains(searchText);
-
-                boolean matchesAvailability = (showAvailable && livre.isDisponible()) ||
-                                              (showBorrowed && !livre.isDisponible());
-
-                return matchesSearch && (matchesAvailability || (!showAvailable && !showBorrowed));
-            })
-            .collect(Collectors.toList());
-
-        JPanel booksPanel = (JPanel) ((JScrollPane) getContentPane().getComponent(0)).getViewport().getView();
-        chargerLivres(filteredLivres, booksPanel);
-    }
-}
+	private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
+	    booksPanel.removeAll();
+	
+	    livres.stream().forEach(livre -> {
+	        JPanel livrePanel = new JPanel();
+	        livrePanel.setLayout(new BorderLayout());
+	        livrePanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+	        livrePanel.setBackground(new Color(255, 255, 255));
+	        livrePanel.setPreferredSize(new Dimension(200, 300));
+	
+	        String imagePath = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty()
+	            ? livre.getImageUrl()
+	            : "ressources/default-book.jpeg"; // Chemin par défaut
+	
+	        // Utilisez loadCoverImage pour charger l'image de couverture
+	        JLabel imageLabel = new JLabel(resizeCoverImage(imagePath, 120, 180));
+	        livrePanel.add(imageLabel, BorderLayout.CENTER);
+	
+	        JPanel textPanel = new JPanel(new GridLayout(2, 1));
+	        textPanel.setBackground(new Color(255, 255, 255));
+	        JLabel titleLabel = new JLabel(livre.getTitre(), JLabel.CENTER);
+	        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+	        JLabel authorLabel = new JLabel(livre.getAuteur(), JLabel.CENTER);
+	        textPanel.add(titleLabel);
+	        textPanel.add(authorLabel);
+	
+	        livrePanel.add(textPanel, BorderLayout.SOUTH);
+	
+	        // Ajout des boutons Modifier et Supprimer
+	        JPanel buttonPanel = new JPanel();
+	        
+	        JButton editButton = new JButton("Modifier");
+	        editButton.setIcon(resizeIcon(loadIcon("/ressources/edit-icon.png"), 20, 20)); // Icône pour modifier
+	        editButton.addActionListener(e -> openEditBookDialog(livre));
+	
+	        JButton deleteButton = new JButton("Supprimer");
+	        deleteButton.setIcon(resizeIcon(loadIcon("/ressources/delete-icon.png"), 20, 20)); // Icône pour supprimer
+	        deleteButton.addActionListener(e -> deleteBook(livre));
+	
+	        buttonPanel.add(editButton);
+	        buttonPanel.add(deleteButton);
+	        livrePanel.add(buttonPanel, BorderLayout.NORTH);
+	
+	        booksPanel.add(livrePanel);
+	    });
+	
+	    booksPanel.revalidate();
+	    booksPanel.repaint();
+	}
+	
+	private ImageIcon loadCoverImage(String path) {
+	    File coverFile = new File(path);
+	    if (coverFile.exists()) {
+	        return new ImageIcon(path);
+	    } else {
+	        System.err.println("Image de couverture non trouvée à : " + path);
+	        return new ImageIcon("ressources/default-book.jpeg"); // Retourne une image par défaut
+	    }
+	}
+	
+	private ImageIcon loadIcon(String path) {
+	    try {
+	        URL iconUrl = LivreView.class.getResource(path);
+	        if (iconUrl != null) {
+	            return new ImageIcon(iconUrl);
+	        } else {
+	            System.err.println("Icône non trouvée à: " + path);
+	            return new ImageIcon(LivreView.class.getResource("/ressources/default-icon.png")); // Icône par défaut
+	        }
+	    } catch (Exception e) {
+	        System.err.println("Erreur lors du chargement de l'icône: " + e.getMessage());
+	        return new ImageIcon(); // Retourne une icône vide en cas d'erreur
+	    }
+	}
+	
+	private ImageIcon resizeCoverImage(String path, int width, int height) {
+	    ImageIcon coverImage = loadCoverImage(path);
+	    if (coverImage != null) {
+	        Image img = coverImage.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+	        return new ImageIcon(img);
+	    } else {
+	        return new ImageIcon(); // Retourne une icône vide si l'image n'a pas pu être chargée
+	    }
+	}
+	
+	private ImageIcon resizeIcon(ImageIcon icon, int width, int height) {
+	    if (icon == null || icon.getImage() == null) {
+	        System.err.println("Icône non valide, utilisation de l'icône par défaut.");
+	        icon = new ImageIcon(LivreView.class.getResource("/ressources/default-icon.png")); // Icône par défaut
+	    }
+	    Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+	    return new ImageIcon(img);
+	}
+	
+	private void filterBooks() {
+	    String searchText = searchField.getText().toLowerCase();
+	    boolean showAvailable = availableCheckBox.isSelected();
+	    boolean showBorrowed = borrowedCheckBox.isSelected();
+	
+	    List<Livre> livres = livreController.lireLivres();
+	
+	    List<Livre> filteredLivres = livres.stream()
+	        .filter(livre -> {
+	            boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchText) ||
+	                                    livre.getAuteur().toLowerCase().contains(searchText) ||
+	                                    livre.getGenre().toLowerCase().contains(searchText);
+	
+	            boolean matchesAvailability = (showAvailable && livre.isDisponible()) ||
+	                                          (showBorrowed && !livre.isDisponible());
+	
+	            return matchesSearch && (matchesAvailability || (!showAvailable && !showBorrowed));
+	        })
+	        .collect(Collectors.toList());
+	
+	    JPanel booksPanel = (JPanel) ((JScrollPane) getContentPane().getComponent(0)).getViewport().getView();
+	    chargerLivres(filteredLivres, booksPanel);
+	}}
