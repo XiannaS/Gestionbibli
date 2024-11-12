@@ -449,27 +449,35 @@ public class LivreView extends JFrame {
 	    Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
 	    return new ImageIcon(img);
 	}
-	
 	private void filterBooks() {
-	    String searchText = searchField.getText().toLowerCase();
-	    boolean showAvailable = availableCheckBox.isSelected();
-	    boolean showBorrowed = borrowedCheckBox.isSelected();
-	
-	    List<Livre> livres = livreController.lireLivres();
-	
-	    List<Livre> filteredLivres = livres.stream()
+	    String searchQuery = searchField.getText().trim().toLowerCase();
+	    boolean onlyAvailable = availableCheckBox.isSelected();
+	    boolean onlyBorrowed = borrowedCheckBox.isSelected();
+
+	    // Filtrer les livres en fonction des critères
+	    List<Livre> filteredBooks = livreController.lireLivres().stream()
 	        .filter(livre -> {
-	            boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchText) ||
-	                                    livre.getAuteur().toLowerCase().contains(searchText) ||
-	                                    livre.getGenre().toLowerCase().contains(searchText);
-	
-	            boolean matchesAvailability = (showAvailable && livre.isDisponible()) ||
-	                                          (showBorrowed && !livre.isDisponible());
-	
-	            return matchesSearch && (matchesAvailability || (!showAvailable && !showBorrowed));
+	            // Vérifier si le livre correspond à la recherche par titre ou auteur
+	            boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchQuery) || livre.getAuteur().toLowerCase().contains(searchQuery);
+	            
+	            // Vérifier la disponibilité ou l'emprunt
+	            boolean matchesAvailability = false;
+	            if (onlyAvailable && !onlyBorrowed) {
+	                matchesAvailability = livre.isDisponible(); // Seulement les livres disponibles
+	            } else if (!onlyAvailable && onlyBorrowed) {
+	                matchesAvailability = !livre.isDisponible(); // Seulement les livres empruntés
+	            } else {
+	                // Si ni "disponible" ni "emprunté" n'est sélectionné, on ne filtre pas la disponibilité
+	                matchesAvailability = true;
+	            }
+
+	            return matchesSearch && matchesAvailability; // Retourner true si les deux conditions sont remplies
 	        })
 	        .collect(Collectors.toList());
+
+	    // Recharger l'affichage avec les livres filtrés
+	    chargerLivres(filteredBooks, (JPanel) ((JScrollPane) getContentPane().getComponent(0)).getViewport().getView());
+	}
+
 	
-	    JPanel booksPanel = (JPanel) ((JScrollPane) getContentPane().getComponent(0)).getViewport().getView();
-	    chargerLivres(filteredLivres, booksPanel);
-	}}
+}

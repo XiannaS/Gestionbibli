@@ -1,14 +1,14 @@
-// Main.java
 package controllers;
 
 import javax.swing.SwingUtilities;
-import vue.DashboardView;
+import vue.MainFrame;
 
 public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            DashboardView dashboardView = new DashboardView();
-            dashboardView.setVisible(true);
+            UserController userController = new UserController();
+            MainFrame mainFrame = new MainFrame(userController);
+            mainFrame.setVisible(true);
         });
     }
 }
