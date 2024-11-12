@@ -5,7 +5,11 @@ import java.awt.*;
 import controllers.UserController;
 
 public class RegisterView extends JPanel {
-    private MainFrame mainFrame;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private MainFrame mainFrame;
     private UserController userController;
 
     public RegisterView(MainFrame mainFrame, UserController userController) {

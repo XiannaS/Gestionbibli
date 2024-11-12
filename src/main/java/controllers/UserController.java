@@ -51,12 +51,14 @@ public class UserController {
         return true;
     }
 
-    public boolean resetPassword(String username, String newPassword) {
-        if (users.containsKey(username)) {
-            users.put(username, newPassword);
-            saveUsers();
+ // Dans UserController
+    public boolean resetPassword(String email) {
+        if (users.containsKey(email)) {
+            // Logique pour envoyer un email de réinitialisation
+            System.out.println("Instructions de réinitialisation envoyées à " + email);
             return true;
         }
-        return false; // User does not exist
+        return false; // L'email n'existe pas
     }
+
 }
