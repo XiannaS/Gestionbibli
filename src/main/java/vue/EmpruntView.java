@@ -1,4 +1,4 @@
-package view;
+package vue;
 
 import controllers.EmpruntController;
 import model.Emprunt;
@@ -11,6 +11,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 
 public class EmpruntView extends JFrame {
 
@@ -68,8 +69,14 @@ public class EmpruntView extends JFrame {
         btnAjouter.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ajouterEmprunt();
+                ajouterEmprunt(); 
+                
             }
+
+			private void ajouterEmprunt() {
+				// TODO Auto-generated method stub
+				
+			}       
         });
         panelAjout.add(btnAjouter);
         
@@ -92,6 +99,11 @@ public class EmpruntView extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 modifierDateRetour(tfIdEmpruntModif.getText(), tfNouvelleDateRetour.getText());
             }
+
+			private void modifierDateRetour(String text, String text2) {
+				// TODO Auto-generated method stub
+				
+			}
         });
         panelModification.add(btnModifier);
 
@@ -114,6 +126,11 @@ public class EmpruntView extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 marquerCommeRetourne(tfIdEmpruntRetour.getText());
             }
+
+			private void marquerCommeRetourne(String text) {
+				// TODO Auto-generated method stub
+				
+			}
         });
 
         JButton btnSupprimer = new JButton("Supprimer Emprunt");
@@ -122,6 +139,11 @@ public class EmpruntView extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 supprimerEmprunt(tfIdEmpruntSuppression.getText());
             }
+
+			private void supprimerEmprunt(String text) {
+				// TODO Auto-generated method stub
+				
+			}
         });
 
         panelRetour.add(btnRetourner);
@@ -143,6 +165,11 @@ public class EmpruntView extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 afficherHistorique();
             }
+
+			private void afficherHistorique() {
+				// TODO Auto-generated method stub
+				
+			}
         });
         panelHistorique.add(btnAfficherHistorique, BorderLayout.SOUTH);
 
@@ -160,10 +187,11 @@ public class EmpruntView extends JFrame {
 
         // Ajouter le panel principal avec les autres composants par-dessus l'image
         backgroundLabel.add(panelPrincipal, BorderLayout.NORTH);
-        backgroundLabel.add(scrollTable, BorderLayout.CENTER);
+        backgroundLabel.add(scrollTable, BorderLayout.CENTER); 
 
-        // Gérer le redimensionnement de l'image de fond
+       /* // Gérer le redimensionnement de l'image de fond
         addComponentListener(new ComponentAdapter() {
             @Override
-            public
+            public*/
+        }}
 
