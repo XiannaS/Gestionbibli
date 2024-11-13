@@ -1,6 +1,5 @@
 package vue;
 
-import controllers.EmpruntController;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -14,8 +13,7 @@ public class EmpruntView extends JFrame {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private EmpruntController empruntController = new EmpruntController();
-    private JTextField tfIdEmprunt, tfIdUtilisateur, tfIdLivre, tfDateEmprunt, tfDateRetour;
+	private JTextField tfIdEmprunt, tfIdUtilisateur, tfIdLivre, tfDateEmprunt, tfDateRetour;
     private JTable tableEmprunts;
     private DefaultTableModel tableModel;
     private JTextArea taHistorique;
