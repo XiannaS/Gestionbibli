@@ -1,66 +1,72 @@
-package vue;
+import java.util.Scanner;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import controllers.UserController;
 
-public class LoginView extends JPanel {
-    private MainFrame mainFrame;
+public class LoginView {
     private UserController userController;
 
-    public LoginView(MainFrame mainFrame, UserController userController) {
-        this.mainFrame = mainFrame;
+    public LoginView(UserController userController) {
         this.userController = userController;
-        
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+    }
 
-        // Champ pour l'email
-        JTextField emailField = new JTextField(15);
-        emailField.setBorder(BorderFactory.createTitledBorder("Email"));
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        add(emailField, gbc);
+    public void displayMenu() {
+        Scanner scanner = new Scanner(System.in);
+        int choice;
 
-        // Champ pour le mot de passe
-        JPasswordField passwordField = new JPasswordField(15);
-        passwordField.setBorder(BorderFactory.createTitledBorder("Mot de passe"));
-        gbc.gridy = 1;
-        add(passwordField, gbc);
+        do {
+            System.out.println("\n--- Menu ---");
+            System.out.println("1. Connexion");
+            System.out.println("2. Inscription");
+            System.out.println("3. Mot de passe oublié");
+            System.out.println("0. Quitter");
+            System.out.print("Choisissez une option : ");
+            choice = scanner.nextInt();
+            scanner.nextLine(); // pour consommer la nouvelle ligne
 
-        // Bouton de connexion
-        JButton loginButton = new JButton("Connexion");
-        loginButton.addActionListener(e -> {
-            String email = emailField.getText();
-            String password = new String(passwordField.getPassword());
-            if (userController.login(email, password)) {
-                JOptionPane.showMessageDialog(this, "Connexion réussie !");
-            } else {
-                JOptionPane.showMessageDialog(this, "Échec de la connexion. Veuillez réessayer.");
+            switch (choice) {
+                case 1 -> login(scanner);
+                case 2 -> register(scanner);
+                case 3 -> resetPassword(scanner);
+                case 0 -> System.out.println("Au revoir !");
+                default -> System.out.println("Option invalide. Essayez encore.");
             }
-        });
-        gbc.gridy = 2;
-        add(loginButton, gbc);
+        } while (choice != 0);
+    }
 
-        // Lien pour s'inscrire
-        JButton registerButton = new JButton("Inscription");
-        registerButton.setForeground(Color.BLUE);
-        registerButton.setBorderPainted(false);
-        registerButton.setContentAreaFilled(false);
-        registerButton.addActionListener(e -> mainFrame.showView("register"));
-        gbc.gridy = 3;
-        add(registerButton, gbc);
+    private void login(Scanner scanner) {
+        System.out.print("Nom d'utilisateur : ");
+        String username = scanner.nextLine();
+        System.out.print("Mot de passe : ");
+        String password = scanner.nextLine();
 
-        // Lien pour mot de passe oublié
-        JButton forgotPasswordButton = new JButton("Mot de passe oublié ?");
-        forgotPasswordButton.setForeground(Color.BLUE);
-        forgotPasswordButton.setBorderPainted(false);
-        forgotPasswordButton.setContentAreaFilled(false);
-        forgotPasswordButton.addActionListener(e -> mainFrame.showView("forgotPassword"));
-        gbc.gridy = 4;
-        add(forgotPasswordButton, gbc);
+        if (userController.authenticate(username, password)) {
+            System.out.println("Connexion réussie !");
+        } else {
+            System.out.println("Nom d'utilisateur ou mot de passe incorrect.");
+        }
+    }
+
+    private void register(Scanner scanner) {
+        System.out.print("Choisissez un nom d'utilisateur : ");
+        String username = scanner.nextLine();
+        System.out.print("Choisissez un mot de passe : ");
+        String password = scanner.nextLine();
+
+        userController.register(username, password);
+    }
+
+    private void resetPassword(Scanner scanner) {
+        System.out.print("Nom d'utilisateur : ");
+        String username = scanner.nextLine();
+        System.out.print("Nouveau mot de passe : ");
+        String newPassword = scanner.nextLine();
+
+        userController.resetPassword(username, newPassword);
+    }
+
+    public static void main(String[] args) {
+        UserController userController = new UserController();
+        LoginView loginView = new LoginView(userController);
+        loginView.displayMenu();
     }
 }

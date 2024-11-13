@@ -9,13 +9,7 @@ public class RegisterView extends JPanel {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private MainFrame mainFrame;
-    private UserController userController;
-
-    public RegisterView(MainFrame mainFrame, UserController userController) {
-        this.mainFrame = mainFrame;
-        this.userController = userController;
-        
+	public RegisterView(MainFrame mainFrame, UserController userController) {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);

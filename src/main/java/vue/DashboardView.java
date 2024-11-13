@@ -3,15 +3,26 @@ package vue;
 import javax.swing.*;
 import java.awt.*;
 
-public class DashboardView extends JFrame {
+public class DashboardView extends JPanel {
     private static final long serialVersionUID = 1L;
+    private CardLayout cardLayout;
+    private JPanel mainPanel;  // Pour contenir les différentes vues (LivreView, EmpruntsView, etc.)
+    private MainFrame mainFrame; 
+    
+    public DashboardView(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;  // Enregistrer la référence à MainFrame
 
-    public DashboardView() {
-        setTitle("Tableau de Bord de la Bibliothèque");
-        setSize(1000, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
-
+        // Configuration de la vue...
+        setLayout(new BorderLayout());}
+    
+        // Constructeur sans argument pour le test dans le main
+        public DashboardView() {
+            this(null);  // Appel du constructeur principal avec 'null' pour MainFrame
+            initDashboard();
+        }
+        // Méthode pour initialiser l'interface de la vue (factoring de code)
+        private void initDashboard() {
+            setLayout(new BorderLayout());
         // En-tête
         JPanel headerPanel = new JPanel();
         headerPanel.setBackground(Color.decode("#004754"));
@@ -20,64 +31,100 @@ public class DashboardView extends JFrame {
         headerPanel.add(titleLabel);
         add(headerPanel, BorderLayout.NORTH);
 
-        // Barre latérale
+        // Barre latérale (pour la navigation)
         JPanel sidebarPanel = new JPanel();
         sidebarPanel.setLayout(new GridLayout(0, 1));
         sidebarPanel.setPreferredSize(new Dimension(200, 0));
         sidebarPanel.setBackground(Color.LIGHT_GRAY);
 
         // Ajout de boutons de navigation
-        sidebarPanel.add(new JButton("Livres"));
-        sidebarPanel.add(new JButton("Emprunts"));
-        sidebarPanel.add(new JButton("Utilisateurs"));
-        sidebarPanel.add(new JButton("Statistiques"));
+        JButton livresButton = new JButton("Livres");
+        livresButton.addActionListener(e -> cardLayout.show(mainPanel, "livres"));
+        JButton empruntsButton = new JButton("Emprunts");
+        empruntsButton.addActionListener(e -> cardLayout.show(mainPanel, "emprunts"));
+        JButton utilisateursButton = new JButton("Utilisateurs");
+        utilisateursButton.addActionListener(e -> cardLayout.show(mainPanel, "utilisateurs"));
+        JButton statistiquesButton = new JButton("Statistiques");
+        statistiquesButton.addActionListener(e -> cardLayout.show(mainPanel, "statistiques"));
+
+        sidebarPanel.add(livresButton);
+        sidebarPanel.add(empruntsButton);
+        sidebarPanel.add(utilisateursButton);
+        sidebarPanel.add(statistiquesButton);
+        
         add(sidebarPanel, BorderLayout.WEST);
 
-        // Zone principale
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayout(3, 2)); // 3 lignes, 2 colonnes
+        // Zone principale (CardLayout pour les vues)
+        mainPanel = new JPanel();
+        cardLayout = new CardLayout();
+        mainPanel.setLayout(cardLayout);
 
-        // Statistiques
-        JPanel statsPanel = new JPanel(new GridLayout(4, 1));
-        statsPanel.setBorder(BorderFactory.createTitledBorder("Statistiques"));
-        statsPanel.add(new JLabel("Total des Livres: 100"));
-        statsPanel.add(new JLabel("Livres Disponibles: 75"));
-        statsPanel.add(new JLabel("Livres Empruntés: 25"));
-        statsPanel.add(new JLabel("Utilisateurs: 50"));
-        mainPanel.add(statsPanel);
-
-        // Graphiques (placeholder)
-        JPanel graphPanel = new JPanel();
-        graphPanel.setBorder(BorderFactory.createTitledBorder("Graphiques"));
-        graphPanel.add(new JLabel("Graphiques ici")); // Remplacez ceci par un graphique réel
-        mainPanel.add(graphPanel);
-
-        // Liste des livres récemment ajoutés
-        JPanel recentBooksPanel = new JPanel(new BorderLayout());
-        recentBooksPanel.setBorder(BorderFactory.createTitledBorder("Livres Récemment Ajoutés"));
-        recentBooksPanel.add(new JLabel("Liste des livres ici"), BorderLayout.CENTER); // Remplacez ceci par une liste réelle
-        mainPanel.add(recentBooksPanel);
-
-        // Notifications
-        JPanel notificationsPanel = new JPanel();
-        notificationsPanel.setBorder(BorderFactory.createTitledBorder("Notifications"));
-        notificationsPanel.add(new JLabel("Aucune notification pour le moment.")); // Remplacez ceci par des notifications réelles
-        mainPanel.add(notificationsPanel);
-
-        // Recherche rapide
-        JPanel searchPanel = new JPanel();
-        searchPanel.setBorder(BorderFactory.createTitledBorder("Recherche Rapide"));
-        searchPanel.add(new JTextField(15));
-        searchPanel.add(new JButton("Rechercher"));
-        mainPanel.add(searchPanel);
+        // Ajout des vues (livres, emprunts, etc.) dans mainPanel
+        mainPanel.add(createLivresView(), "livres");
+        mainPanel.add(createEmpruntsView(), "emprunts");
+        mainPanel.add(createUtilisateursView(), "utilisateurs");
+        mainPanel.add(createStatistiquesView(), "statistiques");
 
         add(mainPanel, BorderLayout.CENTER);
     }
 
+    // Vue des livres
+    private JPanel createLivresView() {
+        JPanel livresPanel = new JPanel(new BorderLayout());
+        livresPanel.setBorder(BorderFactory.createTitledBorder("Gestion des Livres"));
+
+        // Exemple de liste de livres (remplacez ceci par la vraie liste)
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        listModel.addElement("Livre 1");
+        listModel.addElement("Livre 2");
+        listModel.addElement("Livre 3");
+
+        JList<String> booksList = new JList<>(listModel);
+        livresPanel.add(new JScrollPane(booksList), BorderLayout.CENTER);
+
+        // Bouton pour ajouter un livre
+        JButton addBookButton = new JButton("Ajouter un Livre");
+        addBookButton.addActionListener(e -> {
+            // Action pour ajouter un livre
+        });
+        livresPanel.add(addBookButton, BorderLayout.SOUTH);
+
+        return livresPanel;
+    }
+
+
+    // Vue des emprunts (placeholder)
+    private JPanel createEmpruntsView() {
+        JPanel empruntsPanel = new JPanel();
+        empruntsPanel.setBorder(BorderFactory.createTitledBorder("Gestion des Emprunts"));
+        empruntsPanel.add(new JLabel("Gestion des emprunts ici"));  // Remplace par des composants réels
+        return empruntsPanel;
+    }
+
+    // Vue des utilisateurs (placeholder)
+    private JPanel createUtilisateursView() {
+        JPanel utilisateursPanel = new JPanel();
+        utilisateursPanel.setBorder(BorderFactory.createTitledBorder("Gestion des Utilisateurs"));
+        utilisateursPanel.add(new JLabel("Liste des utilisateurs ici"));  // Remplace par des composants réels
+        return utilisateursPanel;
+    }
+
+    // Vue des statistiques (placeholder)
+    private JPanel createStatistiquesView() {
+        JPanel statistiquesPanel = new JPanel();
+        statistiquesPanel.setBorder(BorderFactory.createTitledBorder("Statistiques"));
+        statistiquesPanel.add(new JLabel("Statistiques ici"));  // Remplace par des graphiques réels
+        return statistiquesPanel;
+    }
+
+    // Méthode main pour tester
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            DashboardView dashboard = new DashboardView();
-            dashboard.setVisible(true);
+            JFrame frame = new JFrame("Tableau de Bord de la Bibliothèque");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(1000, 600);
+            frame.add(new DashboardView());
+            frame.setVisible(true);
         });
     }
 }

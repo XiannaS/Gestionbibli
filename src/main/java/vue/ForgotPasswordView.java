@@ -5,13 +5,12 @@ import java.awt.*;
 import controllers.UserController;
 
 public class ForgotPasswordView extends JPanel {
-    private MainFrame mainFrame;
-    private UserController userController;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-    public ForgotPasswordView(MainFrame mainFrame, UserController userController) {
-        this.mainFrame = mainFrame;
-        this.userController = userController;
-
+	public ForgotPasswordView(MainFrame mainFrame, UserController userController) {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
