@@ -1,4 +1,4 @@
-package view;
+package vue;
 
 import controllers.EmpruntController;
 import model.Emprunt;
@@ -14,7 +14,11 @@ import java.util.Date;
 
 public class EmpruntView extends JFrame {
 
-    private EmpruntController empruntController = new EmpruntController();
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private EmpruntController empruntController = new EmpruntController();
     private JTextField tfIdEmprunt, tfIdUtilisateur, tfIdLivre, tfDateEmprunt, tfDateRetour;
     private JTable tableEmprunts;
     private DefaultTableModel tableModel;

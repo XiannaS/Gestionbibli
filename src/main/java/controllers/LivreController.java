@@ -12,12 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LivreController {
-<<<<<<< HEAD
 	private static final String CSV_FILE = "src/main/resources/ressources/books.csv";    // Méthode pour lire les livres depuis le fichier CSV
-=======
-	private static final String CSV_FILE = "src/main/resources/ressources/books.csv";
-	// Méthode pour lire les livres depuis le fichier CSV
->>>>>>> 02517cceb717d824533fa4aa5302c285bb259be0
 
 	public List<Livre> lireLivres() {
 	    try (Stream<String> lines = Files.lines(Paths.get(CSV_FILE))) {
