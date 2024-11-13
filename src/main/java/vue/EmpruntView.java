@@ -1,21 +1,17 @@
 package vue;
 
-import controllers.EmpruntController;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-
 public class EmpruntView extends JFrame {
 
     private static final long serialVersionUID = 1L;
-    private EmpruntController empruntController = new EmpruntController();
     private JTextField tfIdEmprunt, tfIdUtilisateur, tfIdLivre, tfDateEmprunt, tfDateRetour;
     private JTable tableEmprunts;
     private DefaultTableModel tableModel;
-    private JTextArea taHistorique;
     private JLabel backgroundLabel;
 
     public EmpruntView() {
@@ -67,111 +63,19 @@ public class EmpruntView extends JFrame {
         btnAjouter.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ajouterEmprunt(); 
-                
+                ajouterEmprunt();
             }
 
-<<<<<<< HEAD
             private void ajouterEmprunt() {
                 // TODO: ajouter la logique pour ajouter un emprunt
             }
-=======
-			private void ajouterEmprunt() {
-				// TODO Auto-generated method stub
-				
-			}       
->>>>>>> c87199a73e3f24a618a584e74ee9b7c4a68b92ad
         });
         panelAjout.add(btnAjouter);
 
         // Ajouter le panelAjout au panelPrincipal
         panelPrincipal.add(panelAjout);
 
-<<<<<<< HEAD
         // Panel pour afficher les emprunts dans un tableau
-=======
-        JButton btnModifier = new JButton("Modifier");
-        btnModifier.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                modifierDateRetour(tfIdEmpruntModif.getText(), tfNouvelleDateRetour.getText());
-            }
-
-			private void modifierDateRetour(String text, String text2) {
-				// TODO Auto-generated method stub
-				
-			}
-        });
-        panelModification.add(btnModifier);
-
-        // Panel pour marquer un emprunt comme retourné et le supprimer
-        JPanel panelRetour = new JPanel();
-        panelRetour.setLayout(new GridLayout(2, 2, 10, 10));
-        panelRetour.setBorder(BorderFactory.createTitledBorder("Retourner et supprimer un emprunt"));
-        
-        JTextField tfIdEmpruntRetour = new JTextField();
-        JTextField tfIdEmpruntSuppression = new JTextField();
-
-        panelRetour.add(new JLabel("ID Emprunt à retourner:"));
-        panelRetour.add(tfIdEmpruntRetour);
-        panelRetour.add(new JLabel("ID Emprunt à supprimer:"));
-        panelRetour.add(tfIdEmpruntSuppression);
-
-        JButton btnRetourner = new JButton("Retourner le livre");
-        btnRetourner.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                marquerCommeRetourne(tfIdEmpruntRetour.getText());
-            }
-
-			private void marquerCommeRetourne(String text) {
-				// TODO Auto-generated method stub
-				
-			}
-        });
-
-        JButton btnSupprimer = new JButton("Supprimer Emprunt");
-        btnSupprimer.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                supprimerEmprunt(tfIdEmpruntSuppression.getText());
-            }
-
-			private void supprimerEmprunt(String text) {
-				// TODO Auto-generated method stub
-				
-			}
-        });
-
-        panelRetour.add(btnRetourner);
-        panelRetour.add(btnSupprimer);
-
-        // Panel pour afficher l'historique des emprunts
-        JPanel panelHistorique = new JPanel();
-        panelHistorique.setLayout(new BorderLayout());
-        panelHistorique.setBorder(BorderFactory.createTitledBorder("Historique des Emprunts"));
-
-        taHistorique = new JTextArea();
-        taHistorique.setEditable(false);
-        JScrollPane scrollHistorique = new JScrollPane(taHistorique);
-        panelHistorique.add(scrollHistorique, BorderLayout.CENTER);
-
-        JButton btnAfficherHistorique = new JButton("Afficher Historique");
-        btnAfficherHistorique.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                afficherHistorique();
-            }
-
-			private void afficherHistorique() {
-				// TODO Auto-generated method stub
-				
-			}
-        });
-        panelHistorique.add(btnAfficherHistorique, BorderLayout.SOUTH);
-
-        // Table pour afficher les emprunts
->>>>>>> c87199a73e3f24a618a584e74ee9b7c4a68b92ad
         String[] columnNames = {"ID Emprunt", "ID Utilisateur", "ID Livre", "Date Emprunt", "Date Retour", "Est Rendu"};
         tableModel = new DefaultTableModel(columnNames, 0);
         tableEmprunts = new JTable(tableModel);
@@ -181,23 +85,11 @@ public class EmpruntView extends JFrame {
         // Ajouter le panel principal (contenant tous les sous-panels) au centre de la fenêtre
         backgroundLabel.add(panelPrincipal, BorderLayout.CENTER);
 
-<<<<<<< HEAD
         // Table pour afficher les emprunts
         JScrollPane scrollHistoriquePanel = new JScrollPane(panelPrincipal);
         backgroundLabel.add(scrollHistoriquePanel, BorderLayout.CENTER);
 
     }
-=======
-        // Ajouter le panel principal avec les autres composants par-dessus l'image
-        backgroundLabel.add(panelPrincipal, BorderLayout.NORTH);
-        backgroundLabel.add(scrollTable, BorderLayout.CENTER); 
-
-       /* // Gérer le redimensionnement de l'image de fond
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public*/
-        }}
->>>>>>> c87199a73e3f24a618a584e74ee9b7c4a68b92ad
 
     public static void main(String[] args) {
         // S'assurer que l'application utilise le Look and Feel de la plateforme

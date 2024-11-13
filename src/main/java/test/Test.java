@@ -2,10 +2,6 @@ package test; // test imane
 
 
 import controllers.EmpruntController;
-<<<<<<< HEAD
-=======
-import model.Emprunt;
->>>>>>> c87199a73e3f24a618a584e74ee9b7c4a68b92ad
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
