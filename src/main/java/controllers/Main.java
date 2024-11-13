@@ -1,10 +1,7 @@
 package controllers;
 
 import javax.swing.*;
-
-import vue.LivreView;
-
-
+import vue.EmpruntView;
 
 public class Main {
     public static void main(String[] args) {
@@ -17,9 +14,9 @@ public class Main {
 
         // Créer et afficher l'interface utilisateur
         SwingUtilities.invokeLater(() -> {
-            LivreView livreView = new LivreView(); // Création de l'instance de la vue
-            livreView.setVisible(true); // Affichage de la fenêtre
-
+            // Créer l'instance de EmpruntView et l'afficher
+            EmpruntView empruntView = new EmpruntView();
+            empruntView.setVisible(true); // Afficher la fenêtre des emprunts
         });
     }
 }
