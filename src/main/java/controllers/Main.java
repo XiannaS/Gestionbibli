@@ -19,6 +19,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             LivreView livreView = new LivreView(); // Création de l'instance de la vue
             livreView.setVisible(true); // Affichage de la fenêtre
+
         });
     }
 }

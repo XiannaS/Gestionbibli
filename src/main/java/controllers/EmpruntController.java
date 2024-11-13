@@ -14,69 +14,78 @@ public class EmpruntController {
         this.emprunts = new ArrayList<>();
     }
 
-    // Ajouter un emprunt
+    /**
+     * Enregistre un nouvel emprunt dans la liste.
+     * @param id L'identifiant de l'emprunt.
+     * @param utilisateurId L'ID de l'utilisateur qui emprunte le livre.
+     * @param livreId L'ID du livre emprunté.
+     * @param dateEmprunt La date d'emprunt du livre.
+     * @param dateRetour La date de retour prévue pour l'emprunt.
+     */
     public void ajouterEmprunt(int id, int utilisateurId, int livreId, Date dateEmprunt, Date dateRetour) {
         Emprunt emprunt = new Emprunt(id, utilisateurId, livreId, dateEmprunt, dateRetour, false);
         emprunts.add(emprunt);
         System.out.println("Emprunt ajouté : " + emprunt);
     }
 
-    // Marquer un emprunt comme retourné
-    public void marquerCommeRetourne(int idEmprunt) {
+    /**
+     * Rallonge la date de retour d'un emprunt existant.
+     * @param idEmprunt L'identifiant de l'emprunt à modifier.
+     * @param nouvelleDateRetour La nouvelle date de retour prévue.
+     */
+    public void modifierDateRetour(int idEmprunt, Date nouvelleDateRetour) {
         for (Emprunt emprunt : emprunts) {
             if (emprunt.getId() == idEmprunt && !emprunt.isEstRendu()) {
-                emprunt.setEstRendu(true);
-                System.out.println("Emprunt retourné : " + emprunt);
+                emprunt.setDateRetour(nouvelleDateRetour);
+                System.out.println("Date de retour modifiée pour l'emprunt : " + emprunt);
                 return;
             }
         }
         System.out.println("Aucun emprunt trouvé avec cet ID ou il est déjà retourné.");
     }
 
-    // Afficher la liste de tous les emprunts
-    public void afficherEmprunts() {
+    /**
+     * Marque un emprunt comme retourné et permet ensuite sa suppression.
+     * @param idEmprunt L'identifiant de l'emprunt à marquer comme retourné.
+     */
+    public void marquerCommeRetourne(int idEmprunt) {
+        for (Emprunt emprunt : emprunts) {
+            if (emprunt.getId() == idEmprunt && !emprunt.isEstRendu()) {
+                emprunt.setEstRendu(true);
+                System.out.println("Emprunt marqué comme retourné : " + emprunt);
+                return;
+            }
+        }
+        System.out.println("Aucun emprunt trouvé avec cet ID ou il est déjà retourné.");
+    }
+
+    /**
+     * Supprime un emprunt de la liste si celui-ci a été marqué comme retourné.
+     * @param idEmprunt L'identifiant de l'emprunt à supprimer.
+     */
+    public void supprimerEmpruntRetourne(int idEmprunt) {
+        for (int i = 0; i < emprunts.size(); i++) {
+            Emprunt emprunt = emprunts.get(i);
+            if (emprunt.getId() == idEmprunt && emprunt.isEstRendu()) {
+                emprunts.remove(i);
+                System.out.println("Emprunt supprimé : " + emprunt);
+                return;
+            }
+        }
+        System.out.println("Aucun emprunt trouvé avec cet ID ou il n'est pas encore retourné.");
+    }
+
+    /**
+     * Affiche l'historique de tous les emprunts, incluant ceux qui ont été retournés.
+     */
+    public void afficherHistoriqueEmprunts() {
         if (emprunts.isEmpty()) {
             System.out.println("Aucun emprunt à afficher.");
         } else {
+            System.out.println("Historique des emprunts :");
             for (Emprunt emprunt : emprunts) {
                 System.out.println(emprunt);
             }
         }
     }
-
-    // Rechercher un emprunt par utilisateur
-    public void rechercherParUtilisateur(int utilisateurId) {
-        boolean trouve = false;
-        for (Emprunt emprunt : emprunts) {
-            if (emprunt.getUtilisateurId() == utilisateurId) {
-                System.out.println(emprunt);
-                trouve = true;
-            }
-        }
-        if (!trouve) {
-            System.out.println("Aucun emprunt trouvé pour cet utilisateur.");
-        }
-    }
-
-    // Rechercher un emprunt par livre
-    public void rechercherParLivre(int livreId) {
-        boolean trouve = false;
-        for (Emprunt emprunt : emprunts) {
-            if (emprunt.getLivreId() == livreId) {
-                System.out.println(emprunt);
-                trouve = true;
-            }
-        }
-        if (!trouve) {
-            System.out.println("Aucun emprunt trouvé pour ce livre.");
-        }
-    }
-
-    // Exporter tous les emprunts au format CSV
-    public void exporterEmpruntsCsv() {
-        for (Emprunt emprunt : emprunts) {
-            System.out.println(emprunt.toCsvFormat());
-        }
-    }
-
 }
