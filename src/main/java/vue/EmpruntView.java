@@ -136,10 +136,9 @@ public class EmpruntView extends JFrame {
         tableEmprunts.setOpaque(false);
         tableEmprunts.setBackground(new Color(0, 0, 0, 0)); // Fond transparent
         JTableHeader header = tableEmprunts.getTableHeader();
-        header.setOpaque(true); // S'assurer que l'en-tête est opaque
-        header.setBackground(new Color(255, 255, 255, 150)); // Fond de l'en-tête transparent mais pas trop
-        header.setForeground(Color.BLACK); // Texte en noir pour l'en-tête
-
+        header.setOpaque(false); // Titre de la table transparent
+        header.setBackground(new Color(0, 0, 0, 0)); // Titre transparent
+        
         // Modifier les couleurs des cellules
         tableEmprunts.setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie
         tableEmprunts.setForeground(Color.BLACK); // Couleur du texte en noir
