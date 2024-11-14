@@ -2,6 +2,7 @@ package vue;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,18 +20,37 @@ public class EmpruntView extends JFrame {
         setTitle("Gestion des Emprunts");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);  // Centrer la fenêtre sur l'écran
+        setLocationRelativeTo(null); // Centrer la fenêtre sur l'écran
 
         // Utilisation du BorderLayout pour la fenêtre principale
         setLayout(new BorderLayout());
 
-        // Charger l'image de fond
-        ImageIcon backgroundImage = new ImageIcon("/Users/mac/Desktop/your_image.jpg");
-        backgroundLabel = new JLabel(backgroundImage);
-        backgroundLabel.setLayout(new BorderLayout()); // Permet l'ajout de panels par-dessus l'image
+        // Charger l'image de fond en utilisant le ClassLoader et vérifier si elle est chargée
+        ImageIcon backgroundImage;
+        try {
+            backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("ressources/biblio.jpg"));
+            // Vérifiez si l'image est bien chargée
+            if (backgroundImage.getIconWidth() == -1) {
+                System.out.println("Image non trouvée : vérifiez le chemin d'accès.");
+            } else {
+                System.out.println("Image chargée avec succès.");
+            }
+        } catch (Exception e) {
+            System.out.println("Erreur lors du chargement de l'image : " + e.getMessage());
+            e.printStackTrace();
+            backgroundImage = null; // En cas d'erreur, définir l'image comme nulle
+        }
 
-        // Ajouter le JLabel avec l'image de fond à la fenêtre
-        getContentPane().add(backgroundLabel, BorderLayout.CENTER);
+        // Assurez-vous que l'image a été chargée avant de l'utiliser
+        if (backgroundImage != null) {
+            backgroundLabel = new JLabel(backgroundImage);
+            backgroundLabel.setLayout(new BorderLayout()); // Permet l'ajout de composants par-dessus l'image
+
+            // Ajouter le JLabel avec l'image de fond à la fenêtre
+            getContentPane().add(backgroundLabel, BorderLayout.CENTER);
+        } else {
+            System.out.println("Aucune image à afficher en fond.");
+        }
 
         // Panel principal (superposition des autres composants par-dessus l'image)
         JPanel panelPrincipal = new JPanel();
@@ -41,13 +61,19 @@ public class EmpruntView extends JFrame {
         JPanel panelAjout = new JPanel();
         panelAjout.setLayout(new GridLayout(6, 2, 10, 10));
         panelAjout.setBorder(BorderFactory.createTitledBorder("Ajouter un emprunt"));
+        panelAjout.setOpaque(false); // Rendre ce panel transparent
 
+        // Création des champs de saisie avec fond transparent léger
         tfIdEmprunt = new JTextField();
         tfIdUtilisateur = new JTextField();
         tfIdLivre = new JTextField();
         tfDateEmprunt = new JTextField();
         tfDateRetour = new JTextField();
 
+        // Définir une couleur marron pour les labels
+        Color marron = new Color(139, 69, 19); // Marron foncé
+
+        // Ajouter les champs avec des labels marron
         panelAjout.add(new JLabel("ID Emprunt:"));
         panelAjout.add(tfIdEmprunt);
         panelAjout.add(new JLabel("ID Utilisateur:"));
@@ -59,6 +85,22 @@ public class EmpruntView extends JFrame {
         panelAjout.add(new JLabel("Date Retour (yyyy-MM-dd):"));
         panelAjout.add(tfDateRetour);
 
+        // Appliquer la couleur marron aux labels
+        for (Component c : panelAjout.getComponents()) {
+            if (c instanceof JLabel) {
+                ((JLabel) c).setForeground(marron);
+                ((JLabel) c).setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie pour les labels
+            }
+        }
+
+        // Définir la transparence légère pour les champs de saisie
+        setTransparentTextField(tfIdEmprunt);
+        setTransparentTextField(tfIdUtilisateur);
+        setTransparentTextField(tfIdLivre);
+        setTransparentTextField(tfDateEmprunt);
+        setTransparentTextField(tfDateRetour);
+
+        // Bouton pour ajouter un emprunt
         JButton btnAjouter = new JButton("Ajouter Emprunt");
         btnAjouter.addActionListener(new ActionListener() {
             @Override
@@ -67,9 +109,18 @@ public class EmpruntView extends JFrame {
             }
 
             private void ajouterEmprunt() {
-                // TODO: ajouter la logique pour ajouter un emprunt
+                // Logique pour ajouter un emprunt (ici on affiche juste les valeurs dans la console)
+                String idEmprunt = tfIdEmprunt.getText();
+                String idUtilisateur = tfIdUtilisateur.getText();
+                String idLivre = tfIdLivre.getText();
+                String dateEmprunt = tfDateEmprunt.getText();
+                String dateRetour = tfDateRetour.getText();
+
+                // Vous pouvez ajouter ici la logique pour ajouter un emprunt dans le tableau ou dans une base de données.
+                System.out.println("Ajout d'un emprunt : " + idEmprunt + ", " + idUtilisateur + ", " + idLivre + ", " + dateEmprunt + ", " + dateRetour);
             }
         });
+        btnAjouter.setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie pour le bouton
         panelAjout.add(btnAjouter);
 
         // Ajouter le panelAjout au panelPrincipal
@@ -80,15 +131,39 @@ public class EmpruntView extends JFrame {
         tableModel = new DefaultTableModel(columnNames, 0);
         tableEmprunts = new JTable(tableModel);
         JScrollPane scrollTable = new JScrollPane(tableEmprunts);
+
+        // Rendre le tableau et son fond transparent
+        tableEmprunts.setOpaque(false);
+        tableEmprunts.setBackground(new Color(0, 0, 0, 0)); // Fond transparent
+        JTableHeader header = tableEmprunts.getTableHeader();
+        header.setOpaque(true); // S'assurer que l'en-tête est opaque
+        header.setBackground(new Color(255, 255, 255, 150)); // Fond de l'en-tête transparent mais pas trop
+        header.setForeground(Color.BLACK); // Texte en noir pour l'en-tête
+
+        // Modifier les couleurs des cellules
+        tableEmprunts.setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie
+        tableEmprunts.setForeground(Color.BLACK); // Couleur du texte en noir
+
+        // Appliquer une transparence au JScrollPane pour que la zone de la table soit également transparente
+        scrollTable.setOpaque(false);
+        scrollTable.getViewport().setOpaque(false);
+
+        // Ajouter le tableau au panel
         panelPrincipal.add(scrollTable);
 
-        // Ajouter le panel principal (contenant tous les sous-panels) au centre de la fenêtre
-        backgroundLabel.add(panelPrincipal, BorderLayout.CENTER);
+        // Ajouter le panel principal (contenant tous les sous-panels) au centre de la fenêtre avec l'image en fond
+        if (backgroundLabel != null) {
+            backgroundLabel.add(panelPrincipal, BorderLayout.CENTER);
+        } else {
+            getContentPane().add(panelPrincipal, BorderLayout.CENTER);
+        }
+    }
 
-        // Table pour afficher les emprunts
-        JScrollPane scrollHistoriquePanel = new JScrollPane(panelPrincipal);
-        backgroundLabel.add(scrollHistoriquePanel, BorderLayout.CENTER);
-
+    private void setTransparentTextField(JTextField textField) {
+        textField.setOpaque(false);
+        textField.setForeground(Color.BLACK);  // Pour que le texte soit noir
+        textField.setBackground(new Color(255, 255, 255, 150)); // Fond blanc semi-transparent
+        textField.setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie
     }
 
     public static void main(String[] args) {
