@@ -2,6 +2,7 @@ package vue;
 
 import controllers.LivreController;
 import model.Livre;
+import style.ModernNavBar;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -20,8 +21,9 @@ public class LivreView extends JFrame {
         setSize(1400, 900);
         setLocationRelativeTo(null);
 
-        // Barre latérale gauche
-        JPanel sidebar = createSidebar();
+        // Barre de navigation
+        ModernNavBar navBar = new ModernNavBar(); // Créer une instance de la barre de navigation
+        navBar.setPreferredSize(new Dimension(250, getHeight())); // Ajuster la taille de la barre de navigation
 
         // Barre supérieure
         JPanel topBar = createTopBar();
@@ -30,7 +32,7 @@ public class LivreView extends JFrame {
         JScrollPane mainContent = createMainContent();
 
         // Organisation de la disposition
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, mainContent);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, navBar, mainContent);
         splitPane.setDividerSize(0); // Pas de séparateur visible
         splitPane.setDividerLocation(250);
 
@@ -39,35 +41,6 @@ public class LivreView extends JFrame {
 
         // Chargement initial des livres
         updateBookCards();
-    }
-
-    private JPanel createSidebar() {
-        JPanel sidebar = new JPanel();
-        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setBackground(new Color(240, 240, 245));
-        sidebar.setBorder(new EmptyBorder(20, 20, 20, 20));
-
-        JLabel appName = new JLabel("Bookavy");
-        appName.setFont(new Font("SansSerif", Font.BOLD, 24));
-
-        JLabel userName = new JLabel("#Rhett Butler");
-        userName.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        userName.setForeground(Color.GRAY);
-
-        JButton addBookButton = createSidebarButton("Add Book");
-        addBookButton.addActionListener(e -> showAddBookDialog());
-
-        JButton refreshButton = createSidebarButton("Refresh");
-        refreshButton.addActionListener(e -> updateBookCards());
-
-        sidebar.add(appName);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(userName);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
-        sidebar.add(addBookButton);
-        sidebar.add(refreshButton);
-
-        return sidebar;
     }
 
     private JPanel createTopBar() {
@@ -104,14 +77,6 @@ public class LivreView extends JFrame {
         JScrollPane scrollPane = new JScrollPane(bookPanel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         return scrollPane;
-    }
-
-    private JButton createSidebarButton(String text) {
-        JButton button = new JButton(text);
-        button.setFocusPainted(false);
-        button.setBackground(new Color(230, 230, 250));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        return button;
     }
 
     private void updateBookCards() {
