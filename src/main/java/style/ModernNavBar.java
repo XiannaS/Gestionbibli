@@ -1,107 +1,141 @@
 package style;
 
 import javax.swing.*;
+import javax.swing.border.AbstractBorder;
 import java.awt.*;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.net.URL;
 
 public class ModernNavBar extends JPanel {
-
     private static final long serialVersionUID = 1L;
 
-    public ModernNavBar(ActionListener menuListener) {
+    public ModernNavBar() {
         // Configuration de la barre de navigation
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(new Color(255, 255, 255, 180)); // Effet légèrement transparent
-        setPreferredSize(new Dimension(250, getHeight())); // Ajuster la taille de la barre de navigation
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        // Ajoutez ici le code pour le contenu de la barre de navigation comme avant
-        add(createNavBar(menuListener));
-    }
-
-    private JPanel createNavBar(ActionListener menuListener) {
-        JPanel navBar = new JPanel();
-        navBar.setLayout(new BoxLayout(navBar, BoxLayout.Y_AXIS));
-        navBar.setBackground(new Color(255, 255, 255, 180)); // Effet légèrement transparent
-        navBar.setPreferredSize(new Dimension(250, getHeight()));
-        navBar.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        setBackground(new Color(240, 240, 245));
+        setPreferredSize(new Dimension(250, 800)); // Largeur fixe
 
         // Logo
-        JLabel logo = new JLabel(new ImageIcon(new ImageIcon("C:/Eclipse/gestionbibli/src/main/resources/ressources/logo.png").getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH)));
+        JLabel logo = createImageLabel("/ressources/logo.png", 100, 100);
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        navBar.add(Box.createRigidArea(new Dimension(0, 20)));
-        navBar.add(logo);
-        navBar.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        // Photo de profil et nom de l'utilisateur
-        JLabel profilePic = new JLabel(new ImageIcon(new ImageIcon("C:/Eclipse/gestionbibli/src/main/resources/ressources/profile.png").getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH)));
-        profilePic.setPreferredSize(new Dimension(80, 80));
+        add(Box.createRigidArea(new Dimension(0, 20)));
+        add(logo);
+
+        // Photo de profil et nom utilisateur
+        JLabel profilePic = createImageLabel("/ressources/profile.png", 80, 80);
         profilePic.setAlignmentX(Component.CENTER_ALIGNMENT);
-        navBar.add(profilePic);
-        navBar.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        JLabel userName = new JLabel("User    Name", JLabel.CENTER);
-        userName.setFont(new Font("SansSerif", Font.BOLD, 18));
+        JLabel userName = new JLabel("User  Name", JLabel.CENTER);
+        userName.setFont(new Font("SansSerif", Font.BOLD, 16));
         userName.setForeground(new Color(50, 50, 50));
-        navBar.add(userName);
-        navBar.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        // Options de menu
-        navBar.add(createMenuItem("Home", "default-icon", menuListener));
-        navBar.add(createMenuItem("Users", "add-icon", menuListener));
-        navBar.add(createMenuItem("Livres", "biblio", menuListener));
-        navBar.add(createMenuItem("Emprunt", "edit-icon", menuListener));
-        navBar.add(createMenuItem("Rapports", "search-icon", menuListener));
-        navBar.add(createMenuItem("Paramètres", "settings", menuListener));
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(profilePic);
+        add(Box.createRigidArea(new Dimension(0, 5)));
+        add(userName);
 
-        // Espacement bas
-        navBar.add(Box.createVerticalGlue());
+        add(Box.createRigidArea(new Dimension(0, 30)));
 
-        return navBar;
+        // Menu Items
+        add(createMenuItem("Home", "/ressources/default-icon.png"));
+        add(createMenuItem("Users", "/ressources/add-icon.png"));
+        add(createMenuItem("Livres", "/ressources/biblio.png"));
+        add(createMenuItem("Emprunt", "/ressources/edit-icon.png"));
+        add(createMenuItem("Rapports", "/ressources/search-icon.png"));
+        add(createMenuItem("Paramètres", "/ressources/settings.png"));
+
+        add(Box.createVerticalGlue());
     }
 
-    private JPanel createMenuItem(String text, String iconName, ActionListener menuListener) {
-        JPanel menuItem = new JPanel();
-        menuItem.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        menuItem.setBackground(new Color(255, 255, 255));
+    private JPanel createMenuItem(String text, String iconPath) {
+        // Panel pour chaque option
+        JPanel menuItem = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        menuItem.setBackground(Color.WHITE);
         menuItem.setPreferredSize(new Dimension(200, 40));
-        menuItem.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        menuItem.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        menuItem.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        menuItem.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5)); // Marge interne
+        menuItem.setOpaque(false);
 
-        // Redimensionner les icônes
-        ImageIcon icon = new ImageIcon("C:/Eclipse/gestionbibli/src/main/resources/ressources/" + iconName + ".png");
-        Image img = icon.get Image().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
-        JLabel iconLabel = new JLabel(new ImageIcon(img));
+        // Ajout des coins arrondis
+        menuItem.setBorder(new RoundedBorder(new Color(255, 255, 255), 10));
 
+        // Icône
+        JLabel iconLabel = createImageLabel(iconPath, 20, 20);
+
+        // Texte
         JLabel textLabel = new JLabel(text);
-        textLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        textLabel.setForeground(new Color(80, 80, 80));
+        textLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
-        menuItem.add(iconLabel);
-        menuItem.add(textLabel);
-
-        // Ajout de l'écouteur d'événements
+        // Ajout d'événements
         menuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                menuListener.actionPerformed(new ActionEvent(menuItem, ActionEvent.ACTION_PERFORMED, text));
+                JOptionPane.showMessageDialog(menuItem, "Clicked: " + text);
+                // Implémentez ici le changement de contenu
             }
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                menuItem.setBackground(new Color(255, 182, 193));
-                textLabel.setForeground(new Color(0, 120, 215));
-                menuItem.repaint();
+                menuItem.setBackground(new Color(220, 220, 255)); // Effet survol
+                menuItem.setBorder(new RoundedBorder(new Color(220, 220, 255), 10));
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                menuItem.setBackground(new Color(255, 255, 255));
-                textLabel.setForeground(new Color(80, 80, 80));
-                menuItem.repaint();
+                menuItem.setBackground(Color.WHITE); // Retour à l'état normal
+                menuItem.setBorder(new RoundedBorder(Color.WHITE, 10));
             }
         });
 
+        menuItem.add(iconLabel);
+        menuItem.add(textLabel);
         return menuItem;
+    }
+
+    private JLabel createImageLabel(String resourcePath, int width, int height) {
+        // Chargement des images avec ClassLoader
+        URL resourceUrl = getClass().getResource(resourcePath);
+        if (resourceUrl == null) {
+            System.err.println("Image non trouvée à : " + resourcePath);
+            return new JLabel(); // Retourne un JLabel vide si l'image n'est pas trouvée
+        }
+        
+        ImageIcon icon = new ImageIcon(resourceUrl);
+        Image scaledImage = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        return new JLabel(new ImageIcon(scaledImage));
+    }
+    // Classe interne pour créer des bordures arrondies
+    private static class RoundedBorder extends AbstractBorder {
+ 
+        private static final long serialVersionUID = 1L;
+        private final Color backgroundColor;
+        private final int cornerRadius;
+
+        public RoundedBorder(Color backgroundColor, int cornerRadius) {
+            this.backgroundColor = backgroundColor;
+            this.cornerRadius = cornerRadius;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2d.setColor(backgroundColor);
+            g2d.fillRoundRect(x, y, width - 1, height - 1, cornerRadius, cornerRadius);
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(cornerRadius, cornerRadius, cornerRadius, cornerRadius);
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c, Insets insets) {
+            insets.left = insets.right = insets.top = insets.bottom = cornerRadius;
+            return insets;
+        }
     }
 }

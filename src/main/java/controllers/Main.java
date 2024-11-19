@@ -1,53 +1,53 @@
 package controllers;
-import vue.DashboardView;
-import vue.EmpruntView;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import style.ModernNavBar;
 
-public class Main extends JFrame {
-
-    private CardLayout cardLayout;
-    private JPanel mainPanel;
-
-    public Main() {
-        setTitle("Application Principale");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1200, 800);
-        setLocationRelativeTo(null);
-
-        cardLayout = new CardLayout();
-        mainPanel = new JPanel(cardLayout);
-
-        // Ajoutez vos vues ici
-        mainPanel.add(new DashboardView(), "Home");
-        mainPanel.add(new UserView(), "Users");
-        mainPanel.add(new EmpruntView(), "Emprunt");
-        mainPanel.add(new RapportView(), "Rapports");
-        mainPanel.add(new ParamètresView(), "Paramètres");
-
-        // Créer la barre de navigation
-        ModernNavBar navBar = new ModernNavBar(new MenuActionListener());
-
-        // Ajouter la barre de navigation et le panneau principal à la fenêtre
-        add(navBar, BorderLayout.WEST);
-        add(mainPanel, BorderLayout.CENTER);
-    }
-
-    private class MenuActionListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String command = e.getActionCommand();
-            cardLayout.show(mainPanel, command);
-        }
-    }
+public class Main {
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            Main app = new Main();
-            app.setVisible(true);
-        });
+        // Créer la fenêtre principale (JFrame)
+        JFrame frame = new JFrame("Gestion Bibliothèque");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(1200, 800); // Taille de la fenêtre principale
+        frame.setLocationRelativeTo(null); // Centrer la fenêtre à l'écran
+
+        // Créer un panneau principal (par exemple, un DashboardView)
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        JLabel label = new JLabel("Bienvenue dans l'application de gestion de bibliothèque", JLabel.CENTER);
+        label.setFont(new Font("SansSerif", Font.BOLD, 24));
+        mainPanel.add(label, BorderLayout.CENTER);
+
+        // Créer un ActionListener pour gérer les actions du menu
+        ActionListener menuListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String command = e.getActionCommand();
+                System.out.println("Option sélectionnée : " + command);
+                // Ajoutez ici le code pour gérer l'affichage en fonction de l'option
+                // Exemple :
+                // if ("Livres".equals(command)) {
+                //     mainPanel.removeAll();
+                //     mainPanel.add(new LivreView(), BorderLayout.CENTER); // Exemple de changement de vue
+                //     mainPanel.revalidate();
+                //     mainPanel.repaint();
+                // }
+            }
+        };
+
+        // Créer une instance de ModernNavBar et passer l'ActionListener
+        ModernNavBar navBar = new ModernNavBar();
+
+        // Ajouter la barre de navigation à la fenêtre à gauche (utilisation de BorderLayout)
+        frame.getContentPane().setLayout(new BorderLayout());
+        frame.getContentPane().add(navBar, BorderLayout.WEST); // Ajouter la barre de navigation à l'ouest
+        frame.getContentPane().add(mainPanel, BorderLayout.CENTER); // Ajouter le panneau principal au centre
+
+        // Afficher la fenêtre
+        frame.setVisible(true);
     }
 }
