@@ -13,8 +13,9 @@ public class ModernNavBar extends JPanel {
     public ModernNavBar() {
         // Configuration de la barre de navigation
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setBackground(new Color(240, 240, 245));
+        setBackground(new Color(255, 182, 193)); // Couleur rose pastel clair
         setPreferredSize(new Dimension(250, 800)); // Largeur fixe
+        setBorder(new RoundedBorder(new Color(255, 182, 193), 20)); // Bordure arrondie
 
         // Logo
         JLabel logo = createImageLabel("/ressources/logo.png", 100, 100);
@@ -27,7 +28,7 @@ public class ModernNavBar extends JPanel {
         JLabel profilePic = createImageLabel("/ressources/profile.png", 80, 80);
         profilePic.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel userName = new JLabel("User  Name", JLabel.CENTER);
+        JLabel userName = new JLabel("User   Name", JLabel.CENTER);
         userName.setFont(new Font("SansSerif", Font.BOLD, 16));
         userName.setForeground(new Color(50, 50, 50));
 
@@ -78,8 +79,8 @@ public class ModernNavBar extends JPanel {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                menuItem.setBackground(new Color(220, 220, 255)); // Effet survol
-                menuItem.setBorder(new RoundedBorder(new Color(220, 220, 255), 10));
+                menuItem.setBackground(new Color(255, 200, 200)); // Effet survol
+                menuItem.setBorder(new RoundedBorder(new Color(255, 200, 200), 10));
             }
 
             @Override
@@ -106,6 +107,7 @@ public class ModernNavBar extends JPanel {
         Image scaledImage = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new JLabel(new ImageIcon(scaledImage));
     }
+
     // Classe interne pour créer des bordures arrondies
     private static class RoundedBorder extends AbstractBorder {
  
