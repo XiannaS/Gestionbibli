@@ -7,7 +7,11 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class UserView extends JFrame {
-    private JTextField nomField;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JTextField nomField;
     private JTextField prenomField;
     private JTextField emailField;
     private JPasswordField motDePasseField;
@@ -168,7 +172,8 @@ public class UserView extends JFrame {
             UserView userView = new UserView();
 
             // Crée le contrôleur avec la vue
-            UserController userController = new UserController(userView);
+            @SuppressWarnings("unused")
+			UserController userController = new UserController(userView);
 
             // Affiche la vue
             userView.setVisible(true);

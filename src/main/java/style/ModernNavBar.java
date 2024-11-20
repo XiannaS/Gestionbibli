@@ -17,9 +17,16 @@ public class ModernNavBar extends JPanel {
         setPreferredSize(new Dimension(250, 800)); // Largeur fixe
         setBorder(new RoundedBorder(new Color(255, 182, 193), 20)); // Bordure arrondie
 
-        // Logo
-        JLabel logo = createImageLabel("/ressources/logo.png", 100, 100);
+     // Logo dans ModernNavBar
+        JLabel logo = createImageLabel("/ressources/logo.png", 50, 50); // Taille réduite pour le logo
         logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Autres éléments de la barre de navigation
+        add(Box.createRigidArea(new Dimension(0, 20)));
+        add(logo);
+        add(Box.createRigidArea(new Dimension(0, 20)));
+        // Continuez avec les autres composants...
+
 
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(logo);

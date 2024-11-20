@@ -2,8 +2,6 @@ package controllers;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import style.ModernNavBar;
 
 public class Main {
@@ -21,23 +19,6 @@ public class Main {
         JLabel label = new JLabel("Bienvenue dans l'application de gestion de bibliothèque", JLabel.CENTER);
         label.setFont(new Font("SansSerif", Font.BOLD, 24));
         mainPanel.add(label, BorderLayout.CENTER);
-
-        // Créer un ActionListener pour gérer les actions du menu
-        ActionListener menuListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String command = e.getActionCommand();
-                System.out.println("Option sélectionnée : " + command);
-                // Ajoutez ici le code pour gérer l'affichage en fonction de l'option
-                // Exemple :
-                // if ("Livres".equals(command)) {
-                //     mainPanel.removeAll();
-                //     mainPanel.add(new LivreView(), BorderLayout.CENTER); // Exemple de changement de vue
-                //     mainPanel.revalidate();
-                //     mainPanel.repaint();
-                // }
-            }
-        };
 
         // Créer une instance de ModernNavBar et passer l'ActionListener
         ModernNavBar navBar = new ModernNavBar();
