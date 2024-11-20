@@ -7,7 +7,8 @@ import style.ModernNavBar;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.Date;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import javax.swing.border.EmptyBorder;
@@ -22,6 +23,7 @@ public class DashboardView extends JFrame {
     private JPanel overduePanel;
     private EmpruntController empruntController;
     private UserController userController;
+    private UserView userView;
 
     public DashboardView() {
         setTitle("Gestion de Bibliothèque - Tableau de Bord");
@@ -35,7 +37,8 @@ public class DashboardView extends JFrame {
 
         // Initialisation des contrôleurs
         empruntController = new EmpruntController();
-        userController = new UserController(null); // Supposons que `UserView` est géré ailleurs
+        userView = new UserView();
+        userController = new UserController(userView);  
 
         // Panel principal
         JPanel mainPanel = new JPanel();
@@ -73,7 +76,7 @@ public class DashboardView extends JFrame {
 
         // Exemple de statistiques
         int totalEmprunts = empruntController.afficherHistoriqueEmprunts().size();
-        long totalEnRetard = empruntController.afficherHistoriqueEmprunts().stream().filter(e -> e.getDateRetour().before(new Date()) && !e.isEstRendu()).count();
+        long totalEnRetard = empruntController.afficherHistoriqueEmprunts().stream().filter(e -> e.getDateRetour().isBefore(LocalDate.now()) && !e.isEstRendu()).count();
         int totalVisiteurs = userController.lireTousLesUsers().size();  // Supposons que chaque utilisateur est un visiteur
         int nouveauxMembres = userController.lireTousLesUsers().size(); // Simplifié pour l'exemple
 
@@ -131,10 +134,9 @@ public class DashboardView extends JFrame {
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         for (Emprunt emprunt : emprunts) {
-            if (emprunt.getDateRetour().before(new Date()) && !emprunt.isEstRendu()) {
-                Object[] row = {emprunt.getUtilisateurId(), "Titre du livre", "Auteur du livre", // Remplacer par des données réelles
-                                (new Date().getTime() - emprunt.getDateRetour().getTime()) / (1000 * 60 * 60 * 24),
-                                sdf.format(emprunt.getDateRetour())};
+            if (emprunt.getDateRetour().isBefore(LocalDate.now()) && !emprunt.isEstRendu()) {
+                long joursDeRetard = ChronoUnit.DAYS.between(emprunt.getDateRetour(), LocalDate.now());
+                Object[] row = {emprunt.getUtilisateurId(), "Titre du livre", "Auteur du livre", joursDeRetard, sdf.format(java.sql.Date.valueOf(emprunt.getDateRetour()))};
                 model.addRow(row);
             }
         }

@@ -16,12 +16,12 @@ public class UserController {
 
     public UserController(UserView userView) {
         this.userView = userView;
-
         // Liaison des actions de l’interface avec les méthodes de gestion des utilisateurs
         this.userView.getAjouterButton().addActionListener(e -> ajouterUser());
         this.userView.getModifierButton().addActionListener(e -> modifierUser());
         this.userView.getSupprimerButton().addActionListener(e -> supprimerUser());
     }
+
 
     // Méthode pour ajouter un utilisateur
     private void ajouterUser() {
@@ -147,12 +147,19 @@ public class UserController {
             String ligne;
             while ((ligne = reader.readLine()) != null) {
                 String[] details = ligne.split(",");
-                User user = new User(details[0], details[1], details[2], details[3], details[4]);
-                users.add(user);
+                // Vérifiez que chaque ligne contient exactement 5 éléments avant de créer un utilisateur
+                if (details.length == 5) {
+                    User user = new User(details[0], details[1], details[2], details[3], details[4]);
+                    users.add(user);
+                } else {
+                    // Afficher un avertissement ou ignorer la ligne si elle est mal formatée
+                    System.out.println("Ligne ignorée : Mauvais format - " + ligne);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return users;
     }
+
 }
