@@ -12,7 +12,7 @@ import vue.UserView;
 
 public class UserController {
     private UserView userView;
-    private final String fichierCSV = "users.csv";  // Nom du fichier CSV contenant les utilisateurs
+    private final String fichierCSV = "src/main/resources/ressources/users.csv";  // Nom du fichier CSV contenant les utilisateurs
 
     public UserController(UserView userView) {
         this.userView = userView;

@@ -3,6 +3,7 @@ package vue;
 import controllers.EmpruntController;
 import controllers.UserController;
 import model.Emprunt;
+import model.User;
 import style.ModernNavBar;
 
 import javax.swing.*;
@@ -25,14 +26,14 @@ public class DashboardView extends JFrame {
     private UserController userController;
     private UserView userView;
 
-    public DashboardView() {
+    public DashboardView(User user) {
         setTitle("Gestion de Bibliothèque - Tableau de Bord");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
         // Initialisation de la barre de navigation
-        navBar = new ModernNavBar();
+        navBar = new ModernNavBar(user);
         add(navBar, BorderLayout.WEST); // Ajout de la barre de navigation à gauche
 
         // Initialisation des contrôleurs
@@ -147,10 +148,10 @@ public class DashboardView extends JFrame {
 
         return panel;
     }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            new DashboardView();
+            // Créez un utilisateur fictif pour le test
+            User user = new User("Jean", "Dupont", "jean.dupont@example.com", "password123", "Membre");
+            new DashboardView(user).setVisible(true); // Passer l'utilisateur ici
         });
-    }
-}
+    }}

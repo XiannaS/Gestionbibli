@@ -2,6 +2,7 @@ package vue;
 
 import controllers.LivreController;
 import model.Livre;
+import model.User;
 import style.ModernNavBar;
 
 import javax.swing.*;
@@ -26,7 +27,7 @@ public class LivreView extends JFrame {
     private JScrollPane scrollPane; // Référence au JScrollPane
     private JComboBox<String> genreComboBox;
 
-    public LivreView() {
+    public LivreView(User user) {
         livreController = new LivreController();
         setTitle("Gestion de Bibliothèque");
         setSize(1000, 600);
@@ -35,7 +36,7 @@ public class LivreView extends JFrame {
         getContentPane().setBackground(new Color(245, 245, 245)); // Fond doux et taupe
 
         // Initialisation de la barre de navigation
-        navBar = new ModernNavBar();
+        navBar = new ModernNavBar(user);
         add(navBar, BorderLayout.WEST); // Ajout de la barre de navigation à gauche
 
         // Bouton d'ajout de livre
@@ -433,12 +434,13 @@ private void filterBooks() {
     chargerLivres(filteredBooks, (JPanel) scrollPane.getViewport().getView());
 }
     
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            LivreView app = new LivreView();
-            app.setVisible(true);
-        });
-    }
+	public static void main(String[] args) {
+	    SwingUtilities.invokeLater(() -> {
+	        // Créez un utilisateur fictif pour le test
+	        User user = new User("Jean", "Dupont", "jean.dupont@example.com", "password123", "Membre");
+	        new LivreView(user).setVisible(true); // Passer l'utilisateur ici
+	    });
+	}
 
     private JLabel createImageLabel(String resourcePath, int width, int height) {
         // Chargement des images avec ClassLoader

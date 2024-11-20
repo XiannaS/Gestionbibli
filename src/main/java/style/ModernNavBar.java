@@ -2,6 +2,9 @@ package style;
 
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
+
+import model.User;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,7 +13,7 @@ import java.net.URL;
 public class ModernNavBar extends JPanel {
     private static final long serialVersionUID = 1L;
 
-    public ModernNavBar() {
+    public ModernNavBar(User user)  {
         // Configuration de la barre de navigation
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(new Color(255, 182, 193)); // Couleur rose pastel clair
@@ -40,7 +43,7 @@ public class ModernNavBar extends JPanel {
         profileBox.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // Nom d'utilisateur
-        JLabel userName = new JLabel("User Name", JLabel.CENTER);
+        JLabel userName = new JLabel(user.getNom(), JLabel.CENTER);
         userName.setFont(new Font("SansSerif", Font.BOLD, 16));
         userName.setForeground(new Color(50, 50, 50));
         userName.setAlignmentX(Component.CENTER_ALIGNMENT);
