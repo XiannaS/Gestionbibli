@@ -1,17 +1,17 @@
 package model;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class Emprunt {
     private int id;             // Identifiant unique de l'emprunt
     private int utilisateurId;  // Référence à l'utilisateur (ID)
     private int livreId;        // Référence au livre emprunté (ID)
-    private Date dateEmprunt;   // Date d'emprunt
-    private Date dateRetour;    // Date de retour prévue
+    private LocalDate dateEmprunt;   // Date d'emprunt
+    private LocalDate dateRetour;    // Date de retour prévue
     private boolean estRendu;   // Indicateur si le livre a été retourné ou non
 
     // Constructeur
-    public Emprunt(int id, int utilisateurId, int livreId, Date dateEmprunt, Date dateRetour, boolean estRendu) {
+    public Emprunt(int id, int utilisateurId, int livreId, LocalDate dateEmprunt, LocalDate dateRetour, boolean estRendu) {
         this.id = id;
         this.utilisateurId = utilisateurId;
         this.livreId = livreId;
@@ -45,19 +45,19 @@ public class Emprunt {
         this.livreId = livreId;
     }
 
-    public Date getDateEmprunt() {
+    public LocalDate getDateEmprunt() {
         return dateEmprunt;
     }
 
-    public void setDateEmprunt(Date dateEmprunt) {
+    public void setDateEmprunt(LocalDate dateEmprunt) {
         this.dateEmprunt = dateEmprunt;
     }
 
-    public Date getDateRetour() {
+    public LocalDate getDateRetour() {
         return dateRetour;
     }
 
-    public void setDateRetour(Date dateRetour) {
+    public void setDateRetour(LocalDate dateRetour) {
         this.dateRetour = dateRetour;
     }
 

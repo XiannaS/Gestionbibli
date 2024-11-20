@@ -141,7 +141,7 @@ public class UserController {
     }
 
     // Méthode pour lire tous les utilisateurs depuis le fichier CSV
-    private List<User> lireTousLesUsers() {
+    public List<User> lireTousLesUsers() {
         List<User> users = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(fichierCSV))) {
             String ligne;
