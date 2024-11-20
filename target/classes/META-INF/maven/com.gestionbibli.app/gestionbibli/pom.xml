@@ -61,7 +61,12 @@
 	</dependency>
 	-->
 
-        
+
+	<dependency>
+		<groupId>com.example</groupId>
+		<artifactId>interactive-graph</artifactId>
+		<version>1.0-SNAPSHOT</version>
+	</dependency>
     </dependencies>
 
     <build>
