@@ -27,7 +27,7 @@ public class LivreController {
 	                        attributes[2],
 	                        attributes[3],
 	                        Integer.parseInt(attributes[4]),
-	                        Boolean.parseBoolean(attributes[5]),
+	                        "Yes".equalsIgnoreCase(attributes[5]), // Vérifiez si la valeur est "Yes"
 	                        attributes[6]
 	                    );
 	                } catch (NumberFormatException e) {

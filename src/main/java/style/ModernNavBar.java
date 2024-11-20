@@ -17,34 +17,37 @@ public class ModernNavBar extends JPanel {
         setPreferredSize(new Dimension(250, 800)); // Largeur fixe
         setBorder(new RoundedBorder(new Color(255, 182, 193), 20)); // Bordure arrondie
 
-     // Logo dans ModernNavBar
-        JLabel logo = createImageLabel("/ressources/logo.png", 50, 50); // Taille réduite pour le logo
-        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // Conteneur pour le logo
+        JPanel logoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        logoPanel.setOpaque(false); // Rendre le panneau transparent
+        JLabel logo = createImageLabel("/ressources/logo.png", 40, 40);
+        logoPanel.add(logo);
+        add(logoPanel); // Aligner le logo tout en haut à gauche
 
-        // Autres éléments de la barre de navigation
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(logo);
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        // Continuez avec les autres composants...
+        // Ajoutez un espace rigide pour le positionner plus haut
+        add(Box.createRigidArea(new Dimension(0, 10))); // Ajustez la hauteur ici
 
+        // Conteneur principal pour l'image et le nom
+        Box profileBox = Box.createVerticalBox();
+        profileBox.setAlignmentX(Component.CENTER_ALIGNMENT); // Centrer les composants
 
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(logo);
-
-        // Photo de profil et nom utilisateur
+        // Image de profil
         JLabel profilePic = createImageLabel("/ressources/profile.png", 80, 80);
         profilePic.setAlignmentX(Component.CENTER_ALIGNMENT);
+        profileBox.add(profilePic);
 
-        JLabel userName = new JLabel("User   Name", JLabel.CENTER);
+        // Espacement entre l'image et le nom
+        profileBox.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        // Nom d'utilisateur
+        JLabel userName = new JLabel("User Name", JLabel.CENTER);
         userName.setFont(new Font("SansSerif", Font.BOLD, 16));
         userName.setForeground(new Color(50, 50, 50));
+        userName.setAlignmentX(Component.CENTER_ALIGNMENT);
+        profileBox.add(userName);
 
-        add(Box.createRigidArea(new Dimension(0, 10)));
-        add(profilePic);
-        add(Box.createRigidArea(new Dimension(0, 5)));
-        add(userName);
-
-        add(Box.createRigidArea(new Dimension(0, 30)));
+        // Ajout du conteneur dans le centre
+        add(profileBox);
 
         // Menu Items
         add(createMenuItem("Home", "/ressources/default-icon.png"));
@@ -109,7 +112,7 @@ public class ModernNavBar extends JPanel {
             System.err.println("Image non trouvée à : " + resourcePath);
             return new JLabel(); // Retourne un JLabel vide si l'image n'est pas trouvée
         }
-        
+
         ImageIcon icon = new ImageIcon(resourceUrl);
         Image scaledImage = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new JLabel(new ImageIcon(scaledImage));
@@ -117,7 +120,7 @@ public class ModernNavBar extends JPanel {
 
     // Classe interne pour créer des bordures arrondies
     private static class RoundedBorder extends AbstractBorder {
- 
+
         private static final long serialVersionUID = 1L;
         private final Color backgroundColor;
         private final int cornerRadius;

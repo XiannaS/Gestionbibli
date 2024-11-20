@@ -24,6 +24,7 @@ public class LivreView extends JFrame {
     private JCheckBox borrowedCheckBox;
     private ModernNavBar navBar; // Ajout de la barre de navigation
     private JScrollPane scrollPane; // Référence au JScrollPane
+    private JComboBox<String> genreComboBox;
 
     public LivreView() {
         livreController = new LivreController();
@@ -45,6 +46,50 @@ public class LivreView extends JFrame {
         addButton.setForeground(Color.WHITE);
         addButton.addActionListener(e -> openAddBookDialog());
 
+        // Panneau de recherche
+        JPanel searchPanel = new JPanel();
+        searchPanel.setBackground(new Color(245, 245, 245));
+        searchPanel.setLayout(new FlowLayout(FlowLayout.RIGHT)); // Alignement à droite
+
+        searchField = new JTextField(20);
+        searchField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        searchField.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        searchField.setPreferredSize(new Dimension(250, 30)); // Taille adaptée
+        
+        // JComboBox pour le genre
+        genreComboBox = new JComboBox<>(new String[]{"Tous", "Fiction", "Non-Fiction", "Science Fiction", "Fantasy", "Biographie", "Histoire"});
+        genreComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        genreComboBox.setPreferredSize(new Dimension(150, 30));
+
+        availableCheckBox = new JCheckBox("Disponibles");
+        availableCheckBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        availableCheckBox.setBackground(new Color(245, 245, 245));
+
+        borrowedCheckBox = new JCheckBox("Empruntés");
+        borrowedCheckBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        borrowedCheckBox.setBackground(new Color(245, 245, 245));
+
+        // JComboBox pour le genre
+        genreComboBox = new JComboBox<>(new String[]{"Tous", "Fiction", "Non-Fiction", "Science Fiction", "Fantasy", "Biographie", "Histoire"});
+        // Icône de recherche
+        ImageIcon searchIcon = new ImageIcon(getClass().getResource("/ressources/search-icon.png"));
+        Image scaledImage = searchIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+        JButton searchButton = new JButton(new ImageIcon(scaledImage));
+        searchButton.setBackground(new Color(255, 182, 193));
+        searchButton.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        searchButton.setFocusPainted(false);
+        searchButton.addActionListener(e -> filterBooks());
+
+        searchPanel.add(searchField);
+        searchPanel.add(genreComboBox);
+        searchPanel.add(availableCheckBox);
+        searchPanel.add(borrowedCheckBox);
+        searchPanel.add(searchButton);
+
+        add(searchPanel, BorderLayout.NORTH); // Ajoutez le panneau de recherche en haut
+
+        add(searchPanel, BorderLayout.NORTH); // Ajoutez le panneau de recherche en haut
+
         // Panel pour afficher les livres
         JPanel booksPanel = new JPanel();
         booksPanel.setLayout(new GridLayout(0, 3, 10, 10));
@@ -61,27 +106,7 @@ public class LivreView extends JFrame {
         buttonPanel.setBackground(new Color(245, 245, 245));
         buttonPanel.add(addButton);
         bottomPanel.add(buttonPanel, BorderLayout.WEST);
-
-        // Panel pour la recherche et le filtrage
-        JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(new Color(245, 245, 245));
-
-        searchField = new JTextField(20);
-        JButton searchButton = new JButton("Rechercher");
-        searchButton.setIcon(resizeIcon(loadIcon("/ressources/search-icon.png"), 20, 20)); // Charger et redimensionner l'icône
-        searchButton.addActionListener(e -> filterBooks());
-        availableCheckBox = new JCheckBox("Disponibles");
-        borrowedCheckBox = new JCheckBox("Empruntés");
-
-        searchPanel.add(new JLabel("Recherche:"));
-        searchPanel.add(searchField);
-        searchPanel.add(searchButton);
-        searchPanel.add(availableCheckBox);
-        searchPanel.add(borrowedCheckBox);
-
-        add(searchPanel, BorderLayout.NORTH);
-        add(bottomPanel, BorderLayout.SOUTH);
+        add(bottomPanel, BorderLayout.SOUTH); // Ajoutez le panneau inférieur
 
         chargerLivres(livreController.lireLivres(), booksPanel);
     }
@@ -301,118 +326,113 @@ public class LivreView extends JFrame {
         }
     }
 
-    private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
-        booksPanel.removeAll();
+private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
+    booksPanel.removeAll();
 
-        for (Livre livre : livres) {
-            JPanel livrePanel = new JPanel();
-            livrePanel.setLayout(new BorderLayout());
-            livrePanel.setBackground(new Color(245, 245, 245)); // Fond doux et taupe
-            livrePanel.setPreferredSize(new Dimension(200, 350)); // Ajuster la hauteur
+    for (Livre livre : livres) {
+        JPanel livrePanel = new JPanel();
+        livrePanel.setLayout(new BorderLayout());
+        livrePanel.setBackground(new Color(245, 245, 245)); // Fond doux et taupe
+        livrePanel.setPreferredSize(new Dimension(200, 350)); // Ajuster la hauteur
 
-            String imagePath = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty()
-                ? livre.getImageUrl()
-                : "ressources/default-book.jpeg"; // Chemin par défaut
+        String imagePath = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty()
+            ? livre.getImageUrl()
+            : "ressources/default-book.jpeg"; // Chemin par défaut
 
-            JLabel imageLabel = new JLabel(resizeCoverImage(imagePath));
-            imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        JLabel imageLabel = new JLabel(resizeCoverImage(imagePath));
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
 
-            livrePanel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    // Vérifiez si le clic est sur le livrePanel lui-même, pas sur un composant enfant
-                    if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 1) {
-                        // Demander à l'utilisateur s'il veut modifier ou supprimer le livre
-                        int response = JOptionPane.showOptionDialog(livrePanel, 
-                            "Voulez-vous modifier ou supprimer ce livre ?", 
-                            "Choix de l'action", 
-                            JOptionPane.YES_NO_OPTION, 
-                            JOptionPane.QUESTION_MESSAGE, 
-                            null, 
-                            new Object[] {"Modifier", "Supprimer"}, 
-                            null);
-                        
-                        if (response == JOptionPane.YES_OPTION) {
-                            // Ouvrir le dialogue d'édition
-                            openEditBookDialog(livre);
-                        } else if (response == JOptionPane.NO_OPTION) {
-                            // Demander confirmation avant de supprimer
-                            int deleteResponse = JOptionPane.showConfirmDialog(livrePanel, 
-                                "Êtes-vous sûr de vouloir supprimer ce livre ?", 
-                                "Confirmation de Suppression", 
-                                JOptionPane.YES_NO_OPTION);
-                            if (deleteResponse == JOptionPane.YES_OPTION) {
-                                deleteBook(livre);
-                                chargerLivres(livreController.lireLivres(), booksPanel); // Rafraîchir les livres après suppression
-                            }
-                        }
+        livrePanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Vérifiez si le clic est sur le livrePanel lui-même, pas sur un composant enfant
+                if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 1) {
+                    // Demander à l'utilisateur s'il veut modifier ou supprimer le livre
+                    int response = JOptionPane.showOptionDialog(livrePanel, 
+                        "Voulez-vous modifier ou supprimer ce livre ?", 
+                        "Choix de l'action", 
+                        JOptionPane.YES_NO_OPTION, 
+                        JOptionPane.QUESTION_MESSAGE, 
+                        null, 
+                        new Object[] {"Modifier", "Supprimer"}, 
+                        null);
+                    
+                    if (response == JOptionPane.YES_OPTION) {
+                        // Ouvrir le dialogue d'édition
+                        openEditBookDialog(livre);
+                    } else if (response == JOptionPane.NO_OPTION) {
+                        // Appeler la méthode deleteBook pour gérer la confirmation
+                        deleteBook(livre);
                     }
                 }
-            });
-            livrePanel.add(imageLabel, BorderLayout.CENTER);
+            }
+        });
+        livrePanel.add(imageLabel, BorderLayout.CENTER);
 
-            JPanel textPanel = new JPanel(new GridLayout(2, 1));
-            textPanel.setBackground(new Color(245, 245, 245));
-            JLabel titleLabel = new JLabel(livre.getTitre(), JLabel.CENTER);
-            titleLabel.setFont(new Font("Arial", Font.BOLD, 16)); // Ajuster la taille de la police
-            titleLabel.setForeground(new Color(50, 50, 50)); // Texte sombre pour un contraste doux
-            JLabel authorLabel = new JLabel(livre.getAuteur(), JLabel.CENTER);
-            authorLabel.setFont(new Font("Arial", Font.PLAIN, 14)); // Ajuster la taille de la police
-            authorLabel.setForeground(new Color(50, 50, 50)); // Texte sombre pour un contraste doux
-            textPanel.add(titleLabel);
-            textPanel.add(authorLabel);
+        JPanel textPanel = new JPanel(new GridLayout(2, 1));
+        textPanel.setBackground(new Color(245, 245, 245));
+        JLabel titleLabel = new JLabel(livre.getTitre(), JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16)); // Ajuster la taille de la police
+        titleLabel.setForeground(new Color(50, 50, 50)); // Texte sombre pour un contraste doux
+        JLabel authorLabel = new JLabel(livre.getAuteur(), JLabel.CENTER);
+        authorLabel.setFont(new Font("Arial", Font.PLAIN, 14)); // Ajuster la taille de la police
+        authorLabel.setForeground(new Color(50, 50, 50)); // Texte sombre pour un contraste doux
+        textPanel.add(titleLabel);
+        textPanel.add(authorLabel);
 
-            livrePanel.add(textPanel, BorderLayout.SOUTH);
+        livrePanel.add(textPanel, BorderLayout.SOUTH);
 
-            booksPanel.add(livrePanel);
-        }
-
-        booksPanel.revalidate();
-        booksPanel.repaint();
+        booksPanel.add(livrePanel);
     }
 
+    booksPanel.revalidate();
+    booksPanel.repaint();
+}
+
+private void deleteBook(Livre livre) {
+    int confirmed = JOptionPane.showConfirmDialog(this, "Êtes-vous sûr de vouloir supprimer ce livre ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+    if (confirmed == JOptionPane.YES_OPTION) {
+        // Utilisez l'identifiant du livre passé en paramètre
+        livreController.supprimerLivre(livre.getId());
+        JOptionPane.showMessageDialog(this, "Le livre a été supprimé avec succès.");
+        
+        // Recharger la liste des livres
+        chargerLivres(livreController.lireLivres(), (JPanel) scrollPane.getViewport().getView());
+    }
+}
     
-    private void deleteBook(Livre livre) {
-        int confirmed = JOptionPane.showConfirmDialog(this, "Êtes-vous sûr de vouloir supprimer ce livre ?", "Confirmation", JOptionPane.YES_NO_OPTION);
-        if (confirmed == JOptionPane.YES_OPTION) {
-            // Utilisez l'identifiant du livre passé en paramètre
-            livreController.supprimerLivre(livre.getId());
-            JOptionPane.showMessageDialog(this, "Le livre a été supprimé avec succès.");
-            
-            // Recharger la liste des livres
-            chargerLivres(livreController.lireLivres(), (JPanel) scrollPane.getViewport().getView());
-        }
-    }
+    
+private void filterBooks() {
+    String searchQuery = searchField.getText().trim().toLowerCase();
+    boolean onlyAvailable = availableCheckBox.isSelected();
+    boolean onlyBorrowed = borrowedCheckBox.isSelected();
+    String selectedGenre = (String) genreComboBox.getSelectedItem();
 
-    private void filterBooks() {
-        String searchQuery = searchField.getText().trim().toLowerCase();
-        boolean onlyAvailable = availableCheckBox.isSelected();
-        boolean onlyBorrowed = borrowedCheckBox.isSelected();
+    // Filtrer les livres en fonction des critères
+    List<Livre> filteredBooks = livreController.lireLivres().stream()
+        .filter(livre -> {
+            // Vérifier si le livre correspond à la recherche par titre ou auteur
+            boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchQuery) || livre.getAuteur().toLowerCase().contains(searchQuery);
 
-        // Filtrer les livres en fonction des critères
-        List<Livre> filteredBooks = livreController.lireLivres().stream()
-            .filter(livre -> {
-                // Vérifier si le livre correspond à la recherche par titre ou auteur
-                boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchQuery) || livre.getAuteur().toLowerCase().contains(searchQuery);
+            // Vérifier la disponibilité ou l'emprunt
+            boolean matchesAvailability = true; // Par défaut, on considère que ça correspond
+            if (onlyAvailable && !onlyBorrowed) {
+                matchesAvailability = livre.isDisponible(); // Seulement les livres disponibles
+            } else if (!onlyAvailable && onlyBorrowed) {
+                matchesAvailability = !livre.isDisponible(); // Seulement les livres empruntés
+            }
 
-                // Vérifier la disponibilité ou l'emprunt
-                boolean matchesAvailability = false;
-                if (onlyAvailable && !onlyBorrowed) {
-                    matchesAvailability = livre.isDisponible(); // Seulement les livres disponibles
-                } else if (!onlyAvailable && onlyBorrowed) {
-                    matchesAvailability = !livre.isDisponible(); } else {
-                    // Si ni "disponible" ni "emprunté" n'est sélectionné, on ne filtre pas la disponibilité
-                    matchesAvailability = true;
-                }
+            // Vérifier le genre
+            boolean matchesGenre = selectedGenre.equals("Tous") || livre.getGenre().equals(selectedGenre);
 
-                return matchesSearch && matchesAvailability; // Retourner true si les deux conditions sont remplies
-            })
-            .collect(Collectors.toList());
+            return matchesSearch && matchesAvailability && matchesGenre; // Retourner true si toutes les conditions sont remplies
+        })
+        .collect(Collectors.toList());
 
-        // Recharger l'affichage avec les livres filtrés
-        chargerLivres(filteredBooks, (JPanel) scrollPane.getViewport().getView());
-    }
-
+    // Recharger l'affichage avec les livres filtrés
+    chargerLivres(filteredBooks, (JPanel) scrollPane.getViewport().getView());
+}
+    
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             LivreView app = new LivreView();
