@@ -1,53 +1,36 @@
 package style;
 
+
 import javax.swing.*;
+
 import com.formdev.flatlaf.FlatLightLaf;
-import model.User;
+
 import java.awt.*;
 
 public class BaseView extends JFrame {
-    private static final long serialVersionUID = 1L;
-    private User user; // Définir la variable user
 
-    public BaseView(User user) {
-        this.user = user; // Initialiser la variable user
-        setTitle("Application de gestion de bibliothèque");
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public BaseView() {
+        // Configuration de base de la fenêtre
+        setTitle("Application de Gestion de Bibliothèque");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
+        setLocationRelativeTo(null); // Centrer la fenêtre
         setLayout(new BorderLayout());
 
-        // Ajout de la barre de navigation
-        setNavBar(user);
-
-        // Ajout du header (Search bar + Logout)
-        addHeader();
-
-        // Contenu principal (Placeholder)
-        addMainContent();
-
-        setVisible(true);
-    }
-
-    /**
-     * Configure la barre de navigation.
-     */
-    private void setNavBar(User user) {
-        ModernNavBar navBar = new ModernNavBar(user);
-        add(navBar, BorderLayout.WEST);
-    }
-
-    /**
-     * Configure le header avec une search bar et un bouton de déconnexion.
-     */
-    private void addHeader() {
+        // Création de l'en-tête
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(245, 245, 245)); // Couleur grise claire
 
-        // Search Bar Container
-        JPanel searchContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        // Conteneur de la barre de recherche
+        JPanel searchContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         searchContainer.setBackground(new Color(245, 245, 245));
 
-        // Ajout de la search bar
+        // Ajout de la search bar avec bordures arrondies
         JTextField searchBar = new JTextField();
         searchBar.setFont(new Font("SansSerif", Font.PLAIN, 16));
         searchBar.setPreferredSize(new Dimension(300, 35));
@@ -55,11 +38,12 @@ public class BaseView extends JFrame {
         searchBar.setToolTipText("Rechercher...");
         searchContainer.add(searchBar);
 
-        // Ajout d'un bouton "Rechercher"
-        JButton searchButton = new JButton("Rechercher");
-        searchButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        searchButton.setBackground(new Color(135, 206, 250)); // Bleu clair
-        searchButton.setForeground(Color.WHITE);
+        // Ajout d'un bouton "Rechercher" avec une icône
+        ImageIcon searchIcon = new ImageIcon(new ImageIcon(getClass().getResource("/ressources/search-icon.png"))
+                .getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH)); // Redimensionner l'icône
+        JButton searchButton = new JButton(searchIcon);
+        searchButton.setBackground(Color.WHITE);
+        searchButton.setBorder(BorderFactory.createEmptyBorder());
         searchButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         searchButton.addActionListener(e -> {
             String query = searchBar.getText();
@@ -74,69 +58,94 @@ public class BaseView extends JFrame {
 
         headerPanel.add(searchContainer, BorderLayout.WEST);
 
-        // Profile & Logout Container
-        JPanel profileContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        // Profil utilisateur dans l'en-tête
+        JPanel profileContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         profileContainer.setBackground(new Color(245, 245, 245));
 
-        // Ajout du profil utilisateur
-        JLabel profilePic = new JLabel(new ImageIcon(getClass().getResource("/ressources/profile.png")));
-        profileContainer.add(profilePic);
+        // Ajout de l'icône de profil
+        ImageIcon profileIcon = new ImageIcon(new ImageIcon(getClass().getResource("/ressources/profile.png"))
+                .getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH)); // Redimensionner l'icône
+        JLabel profilePic = new JLabel(profileIcon);
+        profilePic.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        profilePic.setToolTipText("Cliquez pour plus d'options");
 
-        JLabel userName = new JLabel(user.getNom() + " " + user.getPrenom());
-        userName.setFont(new Font("SansSerif", Font.BOLD, 14));
-        profileContainer.add(userName);
+        // Ajout de la cloche de notification
+        ImageIcon bellIcon = new ImageIcon(new ImageIcon(getClass().getResource("/ressources/notification.png"))
+                .getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH)); // Redimensionner l'icône
+        JLabel bellLabel = new JLabel(bellIcon);
+        bellLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        bellLabel.setToolTipText("Notifications");
 
-        // Bouton Logout
-        JButton logoutButton = new JButton("Logout");
-        logoutButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        logoutButton.setBackground(new Color(255, 105, 97)); // Rouge clair
-        logoutButton.setForeground(Color.WHITE);
-        logoutButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        logoutButton.addActionListener(e -> {
+        // Ajouter le nom d'utilisateur à côté de l'icône
+        JLabel userName = new JLabel("Bienvenue, Utilisateur");
+        userName.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        userName.setForeground(new Color(50, 50, 50)); // Couleur noire
+
+        // Menu contextuel pour le profil utilisateur
+        JPopupMenu profileMenu = new JPopupMenu();
+        JMenuItem logoutItem = new JMenuItem("Se déconnecter");
+        logoutItem.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        logoutItem.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(BaseView.this, "Voulez-vous vraiment vous déconnecter ?", "Confirmation", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                // Implémentez ici la logique de déconnexion
                 JOptionPane.showMessageDialog(BaseView.this, "Déconnexion réussie !");
                 System.exit(0);
             }
         });
-        profileContainer.add(logoutButton);
+        profileMenu.add(logoutItem);
 
+        // Afficher le menu lors du clic sur l'icône de profil
+        profilePic.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                profileMenu.show(profilePic, evt.getX(), evt.getY());
+            }
+        });
+
+        // Ajouter les composants du profil
+        profileContainer.add(bellLabel);
+        profileContainer.add(userName);
+        profileContainer.add(profilePic);
+
+        // Ajouter le conteneur de profil à l'en-tête
         headerPanel.add(profileContainer, BorderLayout.EAST);
 
-        // Ajout du header en haut
+        // Ajouter l'en-tête à la fenêtre
         add(headerPanel, BorderLayout.NORTH);
-    }
 
-    /**
-     * Configure le contenu principal de l'application.
-     */
-    private void addMainContent() {
-        JPanel mainContent = new JPanel();
-        mainContent.setBackground(new Color(255, 255, 255)); // Blanc
-        mainContent.setLayout(new BorderLayout());
-        JLabel placeholder = new JLabel("Contenu principal ici", JLabel.CENTER);
-        placeholder.setFont(new Font("SansSerif", Font.BOLD, 24));
-        placeholder.setForeground(new Color(100, 100, 100)); // Gris foncé
-        mainContent.add(placeholder, BorderLayout.CENTER);
-        add(mainContent, BorderLayout.CENTER);
+        // Zone de contenu principale
+        JPanel mainPanel = new JPanel();
+        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setLayout(new BorderLayout());
+        JLabel mainLabel = new JLabel("Bienvenue dans votre tableau de bord", SwingConstants.CENTER);
+        mainLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        mainPanel.add(mainLabel, BorderLayout.CENTER);
+
+        // Ajouter le contenu principal à la fenêtre
+        add(mainPanel, BorderLayout.CENTER);
+
+        // Pied de page
+        JPanel footerPanel = new JPanel();
+        footerPanel.setBackground(new Color(245, 245, 245)); // Couleur grise claire
+        JLabel footerLabel = new JLabel("© 2024 Mon Application. Tous droits réservés.", SwingConstants.CENTER);
+        footerLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        footerPanel.add(footerLabel);
+
+        // Ajouter le pied de page
+        add(footerPanel, BorderLayout.SOUTH);
     }
 
     public static void main(String[] args) {
-        // Définir le look and feel
-        try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-        } catch (UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
-        }
-
-        // Créer un utilisateur fictif pour tester l'interface
-        User user = new User("Nom", "Prénom", "email@example.com", "motdepasse", "Rôle");
-
-        // Lancer l'application dans le thread de dispatching des événements Swing
+        // Lancer l'application
         SwingUtilities.invokeLater(() -> {
-            BaseView baseView = new BaseView(user);
-            baseView.setVisible(true); // Rendre la fenêtre visible
+            // Appliquer FlatLaf pour un look moderne
+            try {
+                UIManager.setLookAndFeel(new FlatLightLaf());
+            } catch (UnsupportedLookAndFeelException e) {
+                e.printStackTrace();
+            }
+
+            BaseView baseView = new BaseView();
+            baseView.setVisible(true);
         });
     }
 }

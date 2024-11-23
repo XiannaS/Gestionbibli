@@ -4,7 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ConnexionView extends JFrame {
-    private JTextField emailField;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JTextField emailField;
     private JPasswordField passwordField;
     private JButton connexionButton;
     private JButton inscriptionButton;

@@ -4,6 +4,7 @@ import controllers.LivreController;
 import model.Livre;
 import model.User;
 import style.ModernNavBar;
+import style.BaseView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class LivreView extends JFrame {
+public class LivreView extends BaseView {
     private static final long serialVersionUID = 1L;
     private LivreController livreController;
     private JButton addButton;
@@ -28,11 +29,11 @@ public class LivreView extends JFrame {
     private JComboBox<String> genreComboBox;
 
     public LivreView(User user) {
+        super(); // Appel au constructeur de BaseView
         livreController = new LivreController();
         setTitle("Gestion de Bibliothèque");
-        setSize(1000, 600);
+        setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
         getContentPane().setBackground(new Color(245, 245, 245)); // Fond doux et taupe
 
         // Initialisation de la barre de navigation
@@ -70,8 +71,6 @@ public class LivreView extends JFrame {
         borrowedCheckBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
         borrowedCheckBox.setBackground(new Color(245, 245, 245));
 
-        // JComboBox pour le genre
-        genreComboBox = new JComboBox<>(new String[]{"Tous", "Fiction", "Non-Fiction", "Science Fiction", "Fantasy", "Biographie", "Histoire"});
         // Icône de recherche
         ImageIcon searchIcon = new ImageIcon(getClass().getResource("/ressources/search-icon.png"));
         Image scaledImage = searchIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
@@ -86,8 +85,6 @@ public class LivreView extends JFrame {
         searchPanel.add(availableCheckBox);
         searchPanel.add(borrowedCheckBox);
         searchPanel.add(searchButton);
-
-        add(searchPanel, BorderLayout.NORTH); // Ajoutez le panneau de recherche en haut
 
         add(searchPanel, BorderLayout.NORTH); // Ajoutez le panneau de recherche en haut
 
@@ -111,6 +108,7 @@ public class LivreView extends JFrame {
 
         chargerLivres(livreController.lireLivres(), booksPanel);
     }
+
 
     private void openAddBookDialog() {
         JDialog addDialog = new JDialog(this, "Ajouter un Livre", true);

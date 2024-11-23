@@ -18,7 +18,11 @@ import javax.swing.Box;
 
 
 public class InscriptionView extends JFrame {
-    private JTextField nomField;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JTextField nomField;
     private JTextField prenomField;
     private JTextField emailField;
     private JPasswordField passwordField;
