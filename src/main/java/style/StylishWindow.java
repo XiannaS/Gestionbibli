@@ -3,24 +3,29 @@ package style;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
 
+import model.User;
+import vue.DashboardView;
+import vue.EmpruntView;
+import vue.LivreView;
+import vue.ParamètresView;
+import vue.RapportView;
+import vue.UserView;
+import vue.MessagesView;
+import vue.RemindersView;
+
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 public class StylishWindow extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private boolean isDarkMode = true; // Flag pour le mode actuel
     private int unreadNotifications = 5; // Nombre de notifications non lues
-    private JPopupMenu suggestionsPopup; // Menu popup pour les suggestions de recherche
 
-    public StylishWindow() {
+    public StylishWindow(User user) {
         // Configuration de base de la fenêtre
         setTitle("Card Style Tabs");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -32,7 +37,7 @@ public class StylishWindow extends JFrame {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
 
-     // Panneau pour le logo à gauche
+        // Panneau pour le logo à gauche
         JPanel logoPanel = new JPanel();
         logoPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0)); // Alignement à gauche sans espace
         logoPanel.setOpaque(false); 
@@ -84,55 +89,14 @@ public class StylishWindow extends JFrame {
         // Ajouter le panneau principal dans le headerPanel, en le collant à gauche
         headerPanel.add(topPanel, BorderLayout.WEST);
 
-        // **Barre de recherche et icônes déplacés ici**
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10)); // Alignement au centre
-        searchPanel.setOpaque(false); 
-        
-        JTextField searchBar = new JTextField("Search...");
-        searchBar.setPreferredSize(new Dimension(200, 30));
-        searchBar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(100, 100, 100)),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-
-        // Suggestions automatiques pour la recherche
-        searchBar.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { searchSuggestions(searchBar.getText()); }
-            public void removeUpdate(DocumentEvent e) { searchSuggestions(searchBar.getText()); }
-            public void changedUpdate(DocumentEvent e) { searchSuggestions(searchBar.getText()); }
-
-            private void searchSuggestions(String query) {
-                updateSuggestions(query);
-            }
-        });
-
-        // Icône de la loupe avec animation de survol
-        ImageIcon searchIcon = resizeIcon(new ImageIcon(getClass().getResource("/ressources/search.png")), 30, 30); // Taille de la loupe
-        JLabel searchIconLabel = new JLabel(searchIcon);
-        
-        // Ajouter le listener de survol pour l'effet de zoom
-        searchIconLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                // Agrandir l'icône au survol
-                searchIconLabel.setIcon(resizeIcon(new ImageIcon(getClass().getResource("/ressources/search.png")), 40, 40));
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                // Rétablir la taille normale lorsque la souris sort
-                searchIconLabel.setIcon(resizeIcon(new ImageIcon(getClass().getResource("/ressources/search.png")), 30, 30));
-            }
-        });
-
-        searchPanel.add(searchIconLabel);
-        searchPanel.add(searchBar);
+  
 
         // Icônes sans fond
         ImageIcon modeIcon = resizeIcon(new ImageIcon(getClass().getResource("/ressources/mode.png")), 24, 24);
         ImageIcon notificationIcon = resizeIcon(new ImageIcon(getClass().getResource("/ressources/notification.png")), 24, 24);
 
         JLabel modeLabel = new JLabel(modeIcon);
-        modeLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        modeLabel.setCursor (Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         modeLabel.setToolTipText("Basculez entre le mode clair et le mode sombre");
         modeLabel.addMouseListener(new MouseAdapter() {
             @Override
@@ -158,27 +122,24 @@ public class StylishWindow extends JFrame {
         iconsPanel.add(modeLabel);
         iconsPanel.add(notificationLabel);
 
-        // Ajouter la barre de recherche et les icônes au headerPanel
-        JPanel headerRightPanel = new JPanel();
-        headerRightPanel.setLayout(new BoxLayout(headerRightPanel, BoxLayout.X_AXIS));
-        headerRightPanel.setOpaque(false);
-        headerRightPanel.add(searchPanel);
-        headerRightPanel.add(iconsPanel);
-
-        // Ajouter tout dans le headerPanel
-        headerPanel.add(headerRightPanel, BorderLayout.CENTER);
+        // Ajouter les icônes au headerPanel
+        headerPanel.add(iconsPanel, BorderLayout.EAST);
 
         // Création de l'onglet avec style de carte
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.LEFT, JTabbedPane.SCROLL_TAB_LAYOUT);
         tabbedPane.setUI(new CardTabbedPaneUI());
 
-        // Ajout des onglets
-        String[] labels = {"Home", "Loans", "Books", "Members", "Settings", "Rapport", "Rappels", "Messages"};
-        for (String label : labels) {
-            JLabel content = new JLabel("Contenu de l'onglet " + label, SwingConstants.CENTER);
-            content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            tabbedPane.addTab(label, content);
-        }
+        // Ajout des onglets avec des vues spécifiques
+        tabbedPane.addTab("Home", new DashboardView(user));
+        tabbedPane.addTab("Books", new LivreView(this, user));
+        tabbedPane.addTab("Members", new UserView());
+        tabbedPane.addTab("Loans", new EmpruntView());
+        tabbedPane.addTab("Settings", new ParamètresView());
+        tabbedPane.addTab("Rapport", new RapportView());
+        tabbedPane.addTab("Rappels", new RemindersView());
+        tabbedPane.addTab("Messages", new MessagesView());
+
+       
         
         // Ajout de la fenêtre
         add(headerPanel, BorderLayout.NORTH);
@@ -190,67 +151,54 @@ public class StylishWindow extends JFrame {
         setVisible(true);
     }
 
-    private void updateSuggestions(String query) {
-        // Création du popup de suggestions
-        if (suggestionsPopup == null) {
-            suggestionsPopup = new JPopupMenu();
-        } else {
-            suggestionsPopup.removeAll();
-        }
-
-        if (query.length() > 0) {
-            String[] suggestions = getSearchSuggestions(query);
-            for (String suggestion : suggestions) {
-                JMenuItem item = new JMenuItem(suggestion);
-                item.addActionListener(e -> System.out.println("Suggestion sélectionnée : " + suggestion));
-                suggestionsPopup.add(item);
-            }
-            suggestionsPopup.show(this, 400, 50);  // Position du popup
-        }
-    }
-
-    private String[] getSearchSuggestions(String query) {
-        // Retourne des suggestions basées sur la recherche
-        return new String[]{query + " Result 1", query + " Result 2", query + " Result 3"};
-    }
-
     private ImageIcon resizeIcon(ImageIcon icon, int width, int height) {
         Image img = icon.getImage(); // Obtient l'image
         Image newImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH); // Redimensionne l'image
         return new ImageIcon(newImg); // Retourne l'image redimensionnée
     }
 
-    private void toggleTheme() {
+    public void toggleTheme() {
         try {
+            // Si le thème est déjà activé, on ne fait rien
             if (isDarkMode) {
-                UIManager.setLookAndFeel(new FlatLightLaf());
+                if (!(UIManager.getLookAndFeel() instanceof FlatLightLaf)) {
+                    UIManager.setLookAndFeel(new FlatLightLaf());
+                    SwingUtilities.updateComponentTreeUI(this);
+                }
             } else {
-                UIManager.setLookAndFeel(new FlatDraculaIJTheme());
+                if (!(UIManager.getLookAndFeel() instanceof FlatDraculaIJTheme)) {
+                    UIManager.setLookAndFeel(new FlatDraculaIJTheme());
+                    SwingUtilities.updateComponentTreeUI(this);
+                }
             }
             isDarkMode = !isDarkMode;
-            SwingUtilities.updateComponentTreeUI(this);
         } catch (UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
     }
 
+
     private void applyDraculaTheme() {
         try {
-            UIManager.setLookAndFeel(new FlatDraculaIJTheme());
-            isDarkMode = true;
+            // Si le thème actuel n'est pas déjà le Dracula, l'appliquer
+            if (!(UIManager.getLookAndFeel() instanceof FlatDraculaIJTheme)) {
+                UIManager.setLookAndFeel(new FlatDraculaIJTheme());
+                isDarkMode = true;
+                SwingUtilities.updateComponentTreeUI(this);
+            }
         } catch (UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
-        SwingUtilities.updateComponentTreeUI(this);
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            StylishWindow view = new StylishWindow();
+            // Provide valid values for all parameters in the constructor
+            User currentUser  = new User("John", "Doe", "john.doe@example.com", "password123", "Admin");
+            StylishWindow view = new StylishWindow(currentUser );
             view.setVisible(true);
         });
     }
-}
 
 class CardTabbedPaneUI extends BasicTabbedPaneUI {
     private static final int ARC = 30; // Coins encore plus arrondis
@@ -290,4 +238,5 @@ class CardTabbedPaneUI extends BasicTabbedPaneUI {
     protected void paintFocusIndicator(Graphics g, int tabPlacement, Rectangle[] rects, int tabIndex, Rectangle iconRect, Rectangle textRect, boolean isSelected) {
         // Pas d'indicateur de focus pour un look plus épuré
     }
-}
+}}
+

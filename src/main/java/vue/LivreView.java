@@ -3,10 +3,12 @@ package vue;
 import controllers.LivreController;
 import model.Livre;
 import model.User;
-import style.ModernNavBar;
-import style.BaseView;
-
+import style.SearchBar;
+import style.StylishWindow;
 import javax.swing.*;
+
+import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -15,30 +17,34 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-public class LivreView extends BaseView {
+public class LivreView extends JPanel { // Changez cela pour étendre JPanel
     private static final long serialVersionUID = 1L;
     private LivreController livreController;
     private JButton addButton;
-    private JTextField searchField;
-    private JCheckBox availableCheckBox;
-    private JCheckBox borrowedCheckBox;
-    private ModernNavBar navBar; // Ajout de la barre de navigation
-    private JScrollPane scrollPane; // Référence au JScrollPane
-    private JComboBox<String> genreComboBox;
+    private SearchBar searchBar; 
+    private JScrollPane scrollPane; 
+    private StylishWindow parentWindow; // Référence au JScrollPane
 
-    public LivreView(User user) {
-        super(); // Appel au constructeur de BaseView
+    public LivreView(StylishWindow parentWindow, User user) { // Passez StylishWindow en paramètre
+        this.parentWindow = parentWindow; // Conservez la référence
         livreController = new LivreController();
-        setTitle("Gestion de Bibliothèque");
-        setSize(1200, 800);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        getContentPane().setBackground(new Color(245, 245, 245)); // Fond doux et taupe
+        setLayout(new BorderLayout());
+        setBackground(new Color(245, 245, 245));
 
-        // Initialisation de la barre de navigation
-        navBar = new ModernNavBar(user);
-        add(navBar, BorderLayout.WEST); // Ajout de la barre de navigation à gauche
+        // Initialiser SearchBar
+        searchBar = new SearchBar(); 
+        // Ajouter un écouteur d'événements à la SearchBar
+        searchBar.addSearchListener((searchText, genre, year, isAvailable, isUnavailable) -> {
+            // Appeler la méthode filtrerLivres du contrôleur
+            List<Livre> filteredBooks = livreController.filtrerLivres(searchText.toLowerCase(), isAvailable, isUnavailable, genre);
+            chargerLivres(filteredBooks, (JPanel) scrollPane.getViewport().getView());
+        });
+
+        // Panel d'en-tête
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(245, 245, 245)); // Fond doux et taupe
+        headerPanel.add(searchBar, BorderLayout.CENTER); // Ajouter la SearchBar au centre
 
         // Bouton d'ajout de livre
         addButton = new JButton("Ajouter Livre");
@@ -48,45 +54,12 @@ public class LivreView extends BaseView {
         addButton.setForeground(Color.WHITE);
         addButton.addActionListener(e -> openAddBookDialog());
 
-        // Panneau de recherche
-        JPanel searchPanel = new JPanel();
-        searchPanel.setBackground(new Color(245, 245, 245));
-        searchPanel.setLayout(new FlowLayout(FlowLayout.RIGHT)); // Alignement à droite
+        // Panneau pour les icônes
+        JPanel iconPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        iconPanel.setBackground(new Color(245, 245, 245)); // Fond doux et taupe
+        iconPanel.add(addButton); // Ajouter le bouton d'ajout au panneau d'icônes
 
-        searchField = new JTextField(20);
-        searchField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        searchField.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        searchField.setPreferredSize(new Dimension(250, 30)); // Taille adaptée
-        
-        // JComboBox pour le genre
-        genreComboBox = new JComboBox<>(new String[]{"Tous", "Fiction", "Non-Fiction", "Science Fiction", "Fantasy", "Biographie", "Histoire"});
-        genreComboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        genreComboBox.setPreferredSize(new Dimension(150, 30));
-
-        availableCheckBox = new JCheckBox("Disponibles");
-        availableCheckBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        availableCheckBox.setBackground(new Color(245, 245, 245));
-
-        borrowedCheckBox = new JCheckBox("Empruntés");
-        borrowedCheckBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        borrowedCheckBox.setBackground(new Color(245, 245, 245));
-
-        // Icône de recherche
-        ImageIcon searchIcon = new ImageIcon(getClass().getResource("/ressources/search-icon.png"));
-        Image scaledImage = searchIcon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-        JButton searchButton = new JButton(new ImageIcon(scaledImage));
-        searchButton.setBackground(new Color(255, 182, 193));
-        searchButton.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        searchButton.setFocusPainted(false);
-        searchButton.addActionListener(e -> filterBooks());
-
-        searchPanel.add(searchField);
-        searchPanel.add(genreComboBox);
-        searchPanel.add(availableCheckBox);
-        searchPanel.add(borrowedCheckBox);
-        searchPanel.add(searchButton);
-
-        add(searchPanel, BorderLayout.NORTH); // Ajoutez le panneau de recherche en haut
+        headerPanel.add(iconPanel, BorderLayout.EAST); // Ajouter le panneau d'icônes à l'est
 
         // Panel pour afficher les livres
         JPanel booksPanel = new JPanel();
@@ -95,28 +68,25 @@ public class LivreView extends BaseView {
 
         scrollPane = new JScrollPane(booksPanel); // Stocker la référence ici
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        add(scrollPane, BorderLayout.CENTER);
 
-        // Panel en bas pour le bouton
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setBackground(new Color(245, 245, 245));
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBackground(new Color(245, 245, 245));
-        buttonPanel.add(addButton);
-        bottomPanel.add(buttonPanel, BorderLayout.WEST);
-        add(bottomPanel, BorderLayout.SOUTH); // Ajoutez le panneau inférieur
+        // Ajouter le panneau d'en-tête et le panneau des livres
+        add(headerPanel, BorderLayout.NORTH); // Ajoutez le panneau d'en-tête en haut
+        add(scrollPane, BorderLayout.CENTER); // Ajoutez le panneau des livres
 
         chargerLivres(livreController.lireLivres(), booksPanel);
     }
 
-
-    private void openAddBookDialog() {
-        JDialog addDialog = new JDialog(this, "Ajouter un Livre", true);
-        addDialog.setSize(400, 600);
-        addDialog.setLocationRelativeTo(this);
-        addDialog.setLayout(new GridBagLayout());
-        addDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        addDialog.setResizable(false);
+    public void changeTheme() {
+    	 parentWindow.toggleTheme(); // Appelle la méthode de StylishWindow
+    }
+    
+private void openAddBookDialog() {
+    JDialog addDialog = new JDialog(parentWindow, "Ajouter un Livre", true);
+    addDialog.setSize(400, 600);
+    addDialog.setLocationRelativeTo(parentWindow); // Utilisez parentWindow pour centrer
+    addDialog.setLayout(new GridBagLayout());
+    addDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+    addDialog.setResizable(false);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -192,9 +162,9 @@ public class LivreView extends BaseView {
     }
 
     private void openEditBookDialog(Livre livre) {
-        JDialog editDialog = new JDialog(this, "Modifier un Livre", true);
+    	JDialog editDialog = new JDialog(parentWindow, "Modifier un Livre", true); // Changer le titre
         editDialog.setSize(400, 600);
-        editDialog.setLocationRelativeTo(this);
+        editDialog.setLocationRelativeTo(parentWindow); // Centrer par rapport à parentWindow
         editDialog.setLayout(new GridBagLayout());
         editDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         editDialog.setResizable(false);
@@ -324,70 +294,70 @@ public class LivreView extends BaseView {
             return new ImageIcon(); // Retourne une icône vide si l'image n'est pas trouvée
         }
     }
+   
+    private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
+        booksPanel.removeAll(); // Supprimez tous les composants existants
+        System.out.println("Nombre de livres à charger: " + livres.size());
 
-private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
-    booksPanel.removeAll();
+        for (Livre livre : livres) {
+            JPanel livrePanel = new JPanel();
+            livrePanel.setLayout(new BorderLayout());
+            livrePanel.setBackground(new Color(245, 245, 245)); // Assurez-vous que le fond est correct
+            livrePanel.setPreferredSize(new Dimension(200, 350));
 
-    for (Livre livre : livres) {
-        JPanel livrePanel = new JPanel();
-        livrePanel.setLayout(new BorderLayout());
-        livrePanel.setBackground(new Color(245, 245, 245)); // Fond doux et taupe
-        livrePanel.setPreferredSize(new Dimension(200, 350)); // Ajuster la hauteur
+            String imagePath = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty()
+                ? livre.getImageUrl()
+                : "ressources/default-book.jpeg"; // Chemin par défaut
 
-        String imagePath = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty()
-            ? livre.getImageUrl()
-            : "ressources/default-book.jpeg"; // Chemin par défaut
+            System.out.println("Chemin de l'image: " + imagePath); // Débogage
 
-        JLabel imageLabel = new JLabel(resizeCoverImage(imagePath));
-        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+            JLabel imageLabel = new JLabel(resizeCoverImage(imagePath));
+            imageLabel.setHorizontalAlignment(JLabel.CENTER);
 
-        livrePanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // Vérifiez si le clic est sur le livrePanel lui-même, pas sur un composant enfant
-                if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 1) {
-                    // Demander à l'utilisateur s'il veut modifier ou supprimer le livre
-                    int response = JOptionPane.showOptionDialog(livrePanel, 
-                        "Voulez-vous modifier ou supprimer ce livre ?", 
-                        "Choix de l'action", 
-                        JOptionPane.YES_NO_OPTION, 
-                        JOptionPane.QUESTION_MESSAGE, 
-                        null, 
-                        new Object[] {"Modifier", "Supprimer"}, 
-                        null);
-                    
-                    if (response == JOptionPane.YES_OPTION) {
-                        // Ouvrir le dialogue d'édition
-                        openEditBookDialog(livre);
-                    } else if (response == JOptionPane.NO_OPTION) {
-                        // Appeler la méthode deleteBook pour gérer la confirmation
-                        deleteBook(livre);
+            livrePanel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 1) {
+                        int response = JOptionPane.showOptionDialog(livrePanel, 
+                            "Voulez-vous modifier ou supprimer ce livre ?", 
+                            "Choix de l'action", 
+                            JOptionPane.YES_NO_OPTION, 
+                            JOptionPane.QUESTION_MESSAGE, 
+                            null, 
+                            new Object[] {"Modifier", "Supprimer"}, 
+                            null);
+                        
+                        if (response == JOptionPane.YES_OPTION) {
+                            openEditBookDialog(livre);
+                        } else if (response == JOptionPane.NO_OPTION) {
+                            deleteBook(livre);
+                        }
                     }
                 }
-            }
-        });
-        livrePanel.add(imageLabel, BorderLayout.CENTER);
+            });
 
-        JPanel textPanel = new JPanel(new GridLayout(2, 1));
-        textPanel.setBackground(new Color(245, 245, 245));
-        JLabel titleLabel = new JLabel(livre.getTitre(), JLabel.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16)); // Ajuster la taille de la police
-        titleLabel.setForeground(new Color(50, 50, 50)); // Texte sombre pour un contraste doux
-        JLabel authorLabel = new JLabel(livre.getAuteur(), JLabel.CENTER);
-        authorLabel.setFont(new Font("Arial", Font.PLAIN, 14)); // Ajuster la taille de la police
-        authorLabel.setForeground(new Color(50, 50, 50)); // Texte sombre pour un contraste doux
-        textPanel.add(titleLabel);
-        textPanel.add(authorLabel);
+            livrePanel.add(imageLabel, BorderLayout.CENTER);
 
-        livrePanel.add(textPanel, BorderLayout.SOUTH);
+            JPanel textPanel = new JPanel(new GridLayout(2, 1));
+            textPanel.setBackground(new Color(245, 245, 245)); // Assurez-vous que le fond est correct
+            JLabel titleLabel = new JLabel(livre.getTitre(), JLabel.CENTER);
+            titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            titleLabel.setForeground(new Color(50, 50, 50));
+            JLabel authorLabel = new JLabel(livre.getAuteur(), JLabel.CENTER);
+            authorLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+            authorLabel.setForeground(new Color(50, 50, 50));
+            textPanel.add(titleLabel);
+            textPanel.add(authorLabel);
 
-        booksPanel.add(livrePanel);
+            livrePanel.add(textPanel, BorderLayout.SOUTH);
+
+            booksPanel.add(livrePanel);
+        }
+
+        booksPanel.revalidate(); // Revalider le panneau
+        booksPanel.repaint(); // Redessiner le panneau
     }
-
-    booksPanel.revalidate();
-    booksPanel.repaint();
-}
-
+    
 private void deleteBook(Livre livre) {
     int confirmed = JOptionPane.showConfirmDialog(this, "Êtes-vous sûr de vouloir supprimer ce livre ?", "Confirmation", JOptionPane.YES_NO_OPTION);
     if (confirmed == JOptionPane.YES_OPTION) {
@@ -400,47 +370,21 @@ private void deleteBook(Livre livre) {
     }
 }
     
-    
-private void filterBooks() {
-    String searchQuery = searchField.getText().trim().toLowerCase();
-    boolean onlyAvailable = availableCheckBox.isSelected();
-    boolean onlyBorrowed = borrowedCheckBox.isSelected();
-    String selectedGenre = (String) genreComboBox.getSelectedItem();
-
-    // Filtrer les livres en fonction des critères
-    List<Livre> filteredBooks = livreController.lireLivres().stream()
-        .filter(livre -> {
-            // Vérifier si le livre correspond à la recherche par titre ou auteur
-            boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchQuery) || livre.getAuteur().toLowerCase().contains(searchQuery);
-
-            // Vérifier la disponibilité ou l'emprunt
-            boolean matchesAvailability = true; // Par défaut, on considère que ça correspond
-            if (onlyAvailable && !onlyBorrowed) {
-                matchesAvailability = livre.isDisponible(); // Seulement les livres disponibles
-            } else if (!onlyAvailable && onlyBorrowed) {
-                matchesAvailability = !livre.isDisponible(); // Seulement les livres empruntés
-            }
-
-            // Vérifier le genre
-            boolean matchesGenre = selectedGenre.equals("Tous") || livre.getGenre().equals(selectedGenre);
-
-            return matchesSearch && matchesAvailability && matchesGenre; // Retourner true si toutes les conditions sont remplies
-        })
-        .collect(Collectors.toList());
-
-    // Recharger l'affichage avec les livres filtrés
-    chargerLivres(filteredBooks, (JPanel) scrollPane.getViewport().getView());
+ 
+public static void main(String[] args) {
+    SwingUtilities.invokeLater(() -> {
+        try {
+            // Appliquer le thème global par défaut
+            UIManager.setLookAndFeel(new FlatDraculaIJTheme());
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+        User currentUser = null;
+		StylishWindow view = new StylishWindow(currentUser);
+        view.setVisible(true);
+    });
 }
-    
-	public static void main(String[] args) {
-	    SwingUtilities.invokeLater(() -> {
-	        // Créez un utilisateur fictif pour le test
-	        User user = new User("Jean", "Dupont", "jean.dupont@example.com", "password123", "Membre");
-	        new LivreView(user).setVisible(true); // Passer l'utilisateur ici
-	    });
-	}
-
-    private JLabel createImageLabel(String resourcePath, int width, int height) {
+ JLabel createImageLabel(String resourcePath, int width, int height) {
         // Chargement des images avec ClassLoader
         URL resourceUrl = getClass().getResource(resourcePath);
         if (resourceUrl == null) {

@@ -48,7 +48,7 @@ public class AuthController {
                     new DashboardView(user).setVisible(true);
                 } else {
                     // Rediriger vers la vue des livres pour l'utilisateur normal
-                    new LivreView(user).setVisible(true);
+                    new LivreView(null, user).setVisible(true);
                 }
                 connexionView.dispose(); // Fermer la fenêtre de connexion
                 return;

@@ -96,4 +96,33 @@ public class LivreController {
             e.printStackTrace();
         }
     }
+    
+    public List<Livre> filtrerLivres(String searchQuery, boolean onlyAvailable, boolean onlyBorrowed, String selectedGenre) {
+        List<Livre> allBooks = lireLivres();
+        System.out.println("Total livres chargés: " + allBooks.size());
+
+        return allBooks.stream()
+            .filter(livre -> {
+                // Vérifier si le livre correspond à la recherche par titre ou auteur
+                boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchQuery) || 
+                                        livre.getAuteur().toLowerCase().contains(searchQuery);
+                System.out.println("Livre: " + livre.getTitre() + ", Correspond à la recherche: " + matchesSearch);
+
+                // Vérifier la disponibilité ou l'emprunt
+                boolean matchesAvailability = true; // Par défaut, on considère que ça correspond
+                if (onlyAvailable && !onlyBorrowed) {
+                    matchesAvailability = livre.isDisponible(); // Seulement les livres disponibles
+                } else if (!onlyAvailable && onlyBorrowed) {
+                    matchesAvailability = !livre.isDisponible(); // Seulement les livres empruntés
+                }
+
+                // Vérifier le genre
+                boolean matchesGenre = selectedGenre.equals("Tous") || livre.getGenre().equals(selectedGenre);
+                System.out.println("Livre: " + livre.getTitre() + ", Genre correspond: " + matchesGenre);
+
+                return matchesSearch && matchesAvailability && matchesGenre; // Retourner true si toutes les conditions sont remplies
+            })
+            .peek(livre -> System.out.println("Livre filtré: " + livre.getTitre())) // Pour voir les livres filtrés
+            .collect(Collectors.toList());
+    }
 }

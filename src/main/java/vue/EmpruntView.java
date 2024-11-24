@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class EmpruntView extends JFrame {
+public class EmpruntView extends JPanel {
 
     private static final long serialVersionUID = 1L;
     private JTextField tfIdEmprunt, tfIdUtilisateur, tfIdLivre, tfDateEmprunt, tfDateRetour;
@@ -16,19 +16,13 @@ public class EmpruntView extends JFrame {
     private JLabel backgroundLabel;
 
     public EmpruntView() {
-        // Configuration de la fenêtre
-        setTitle("Gestion des Emprunts");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // Centrer la fenêtre sur l'écran
-
-        // Utilisation du BorderLayout pour la fenêtre principale
+        // Configuration du panel
         setLayout(new BorderLayout());
 
         // Charger l'image de fond en utilisant le ClassLoader et vérifier si elle est chargée
         ImageIcon backgroundImage;
         try {
-            backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("ressources/biblio.jpg"));
+            backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("ressources/biblio.png"));
             // Vérifiez si l'image est bien chargée
             if (backgroundImage.getIconWidth() == -1) {
                 System.out.println("Image non trouvée : vérifiez le chemin d'accès.");
@@ -45,9 +39,7 @@ public class EmpruntView extends JFrame {
         if (backgroundImage != null) {
             backgroundLabel = new JLabel(backgroundImage);
             backgroundLabel.setLayout(new BorderLayout()); // Permet l'ajout de composants par-dessus l'image
-
-            // Ajouter le JLabel avec l'image de fond à la fenêtre
-            getContentPane().add(backgroundLabel, BorderLayout.CENTER);
+            add(backgroundLabel); // Ajouter le JLabel avec l'image de fond au JPanel
         } else {
             System.out.println("Aucune image à afficher en fond.");
         }
@@ -93,7 +85,7 @@ public class EmpruntView extends JFrame {
             }
         }
 
-        // Définir la transparence légère pour les champs de saisie
+        // Définir la transparence légère pour les champs de sais ie
         setTransparentTextField(tfIdEmprunt);
         setTransparentTextField(tfIdUtilisateur);
         setTransparentTextField(tfIdLivre);
@@ -150,11 +142,9 @@ public class EmpruntView extends JFrame {
         // Ajouter le tableau au panel
         panelPrincipal.add(scrollTable);
 
-        // Ajouter le panel principal (contenant tous les sous-panels) au centre de la fenêtre avec l'image en fond
+        // Ajouter le panel principal (contenant tous les sous-panels) au JLabel avec l'image en fond
         if (backgroundLabel != null) {
             backgroundLabel.add(panelPrincipal, BorderLayout.CENTER);
-        } else {
-            getContentPane().add(panelPrincipal, BorderLayout.CENTER);
         }
     }
 
@@ -175,8 +165,12 @@ public class EmpruntView extends JFrame {
 
         // Créer et afficher l'interface utilisateur
         SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Gestion des Emprunts");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(800, 600);
             EmpruntView empruntView = new EmpruntView();
-            empruntView.setVisible(true); // Afficher la fenêtre des emprunts
+            frame.add(empruntView);
+            frame.setVisible(true); // Afficher la fenêtre des emprunts
         });
     }
 }

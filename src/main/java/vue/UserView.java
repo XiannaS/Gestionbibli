@@ -6,12 +6,9 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
-public class UserView extends JFrame {
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private JTextField nomField;
+public class UserView extends JPanel {
+    private static final long serialVersionUID = 1L;
+    private JTextField nomField;
     private JTextField prenomField;
     private JTextField emailField;
     private JPasswordField motDePasseField;
@@ -24,14 +21,8 @@ public class UserView extends JFrame {
     private JButton supprimerButton;
 
     public UserView() {
-        setTitle("Gestion des Utilisateurs");
-        setSize(600, 400);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-
         // Initialisation des composants
         initComponents();
-
         // Ajouter les composants à la fenêtre
         setLayout(new BorderLayout());
         add(createFormPanel(), BorderLayout.NORTH);
