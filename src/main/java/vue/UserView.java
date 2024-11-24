@@ -164,7 +164,7 @@ public class UserView extends JPanel {
 
             // Crée le contrôleur avec la vue
             @SuppressWarnings("unused")
-			UserController userController = new UserController(userView);
+			UserController userController = new UserController();
 
             // Affiche la vue
             userView.setVisible(true);

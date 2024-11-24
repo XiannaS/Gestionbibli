@@ -132,10 +132,7 @@ public class InscriptionView extends JFrame {
         return new String(passwordField.getPassword());
     }
 
-    // Le rôle est maintenant fixé à "Membre", donc cette méthode est inutile
-    // public String getRole() {
-    //    return (String) roleComboBox.getSelectedItem();
-    // }
+ 
 
     public JButton getInscriptionButton() {
         return inscriptionButton;

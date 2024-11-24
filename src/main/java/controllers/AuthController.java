@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import model.Role;
 import model.User;
 import style.StylishWindow;
 import vue.ConnexionView;
@@ -66,7 +67,7 @@ public class AuthController {
         String prenom = inscriptionView.getPrenom();
         String email = inscriptionView.getEmail();
         String motDePasse = inscriptionView.getMotDePasse();
-        String role = "Membre";  // Le rôle est maintenant toujours "Membre"
+        Role role = Role.MEMBRE;  // Le rôle est maintenant toujours "Membre"
 
         // Vérification des champs vides
         if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || motDePasse.isEmpty()) {
@@ -99,6 +100,7 @@ public class AuthController {
         }
     }
     
+
     private List<User> lireTousLesUsers() {
         List<User> users = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(fichierCSV))) {
@@ -106,8 +108,13 @@ public class AuthController {
             while ((ligne = reader.readLine()) != null) {
                 String[] details = ligne.split(",");
                 if (details.length == 5) {
-                    User user = new User(details[0], details[1], details[2], details[3], details[4]);
-                    users.add(user);
+                    try {
+                        Role role = Role.valueOf(details[4].toUpperCase()); // Convertir la chaîne en majuscules
+                        User user = new User(details[0], details[1], details[2], details[3], role);
+                        users.add(user);
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Rôle inconnu dans la ligne : " + ligne);
+                    }
                 } else {
                     System.err.println("Ligne ignorée (format incorrect) : " + ligne);
                 }
@@ -121,5 +128,5 @@ public class AuthController {
         }
         return users;
     }
-
 }
+

@@ -2,6 +2,7 @@ package vue;
 
 import controllers.LivreController;
 import model.Livre;
+import model.Role;
 import model.User;
 import style.SearchBar;
 import style.StylishWindow;
@@ -33,7 +34,7 @@ public class LivreView extends JPanel {
         setLayout(new BorderLayout());
 
         // Déterminer le rôle de l'utilisateur
-        String userRole = user.getRole();
+        Role userRole = user.getRole();
 		// Initialiser SearchBar
         searchBar = new SearchBar(userRole); 
         searchBar.addSearchListener((searchText, genre, year, isAvailable, isUnavailable) -> {
@@ -47,7 +48,7 @@ public class LivreView extends JPanel {
         headerPanel.add(searchBar, BorderLayout.CENTER);
 
         // Vérifier le rôle de l'utilisateur
-        if (user != null && "Bibliothécaire".equals(user.getRole())) {
+        if (user != null && Role.BIBLIOTHECAIRE.equals(user.getRole())) {
             // Bouton d'ajout de livre
             addButton = new JButton("Ajouter Livre");
             addButton.setIcon(resizeIcon(loadIcon("/ressources/add-icon.png"), 20, 20));
@@ -324,7 +325,7 @@ private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
             @Override
             public void mouseClicked(MouseEvent e) {
                 // Vérifiez si l'utilisateur est un bibliothécaire
-                if (user != null && "Bibliothécaire".equals(user.getRole())) {
+            	if (user != null && Role.BIBLIOTHECAIRE.equals(user.getRole())) {
                     if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 1) {
                         int response = JOptionPane.showOptionDialog(livrePanel, 
                             "Voulez-vous modifier ou supprimer ce livre ?", 

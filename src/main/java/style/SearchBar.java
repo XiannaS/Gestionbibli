@@ -3,6 +3,8 @@ package style;
 import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
 import com.toedter.calendar.JDateChooser;
 
+import model.Role;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -17,9 +19,9 @@ public class SearchBar extends JPanel {
     private JPanel filterPanel;
     private JTextField searchField;
     private SearchListener searchListener; // Champ pour l'écouteur
-    private String userRole; // Rôle de l'utilisateur
+    private Role userRole; // Rôle de l'utilisateur
 
-    public SearchBar(String userRole) {
+    public SearchBar(Role userRole) {
         this.userRole = userRole; // Initialiser le rôle de l'utilisateur
 
         // Configuration de la barre de recherche
@@ -33,7 +35,7 @@ public class SearchBar extends JPanel {
 
         // ComboBox pour sélectionner la catégorie
         String[] categories;
-        if ("Membre".equals(userRole)) {
+        if (Role.MEMBRE.equals(userRole)) {
             categories = new String[]{"Livres"}; // Un membre normal n'a accès qu'à "Livres"
         } else {
             categories = new String[]{"Livres", "Utilisateurs", "Emprunts"}; // Autres rôles ont accès à toutes les catégories
@@ -86,11 +88,11 @@ public class SearchBar extends JPanel {
                 // Exemple de récupération de valeurs en fonction de la catégorie
                 if ("Livres".equals(categoryComboBox.getSelectedItem())) {
                     genre = ((JComboBox<String>) filterPanel.getComponent(1)).getSelectedItem().toString();
-                    year = ((JTextField) filterPanel.getComponent(3)).getText();
+                    year = ((JTextField) filterPanel.getComponent(3)). getText();
                     isAvailable = ((JRadioButton) filterPanel.getComponent(5)).isSelected();
                     isUnavailable = ((JRadioButton) filterPanel.getComponent(6)).isSelected();
                 }
- // Appeler l'écouteur de recherche
+                // Appeler l'écouteur de recherche
                 searchListener.onSearch(searchField.getText(), genre, year, isAvailable, isUnavailable);
             }
         });
@@ -153,7 +155,7 @@ public class SearchBar extends JPanel {
             filterPanel.add(new JLabel("Auteur:"));
             filterPanel.add(new JTextField(10));
 
-        } else if ("Utilisateurs".equals(selectedCategory) && !"Membre".equals(userRole)) {
+        } else if ("Utilisateurs".equals(selectedCategory) && !Role.MEMBRE.equals(userRole)) {
             // Nom: JTextField
             filterPanel.add(new JLabel("Nom:"));
             filterPanel.add(new JTextField(10));
@@ -163,7 +165,7 @@ public class SearchBar extends JPanel {
             JComboBox<String> statusComboBox = new JComboBox<>(new String[]{"Tous", "Actif", "Inactif"});
             filterPanel.add(statusComboBox);
 
-        } else if ("Emprunts".equals(selectedCategory) && !"Membre".equals(userRole)) {
+        } else if ("Emprunts".equals(selectedCategory) && !Role.MEMBRE.equals(userRole)) {
             // Nom de l'utilisateur: JTextField
             filterPanel.add(new JLabel("Nom de l'utilisateur:"));
             filterPanel.add(new JTextField(10));
@@ -195,7 +197,7 @@ public class SearchBar extends JPanel {
 
     public String getSelectedGenre() {
         // Supposons que la JComboBox pour les genres est le deuxième composant du filterPanel
-        return ((JComboBox<String>) filterPanel.getComponent(1)).getSelectedItem().toString();
+        return ((JComboBox<String>) filterPanel.getComponent(1 )).getSelectedItem().toString();
     }
 
     public boolean isAvailableSelected() {

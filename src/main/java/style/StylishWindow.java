@@ -3,11 +3,12 @@ package style;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
 
+import model.Role;
 import model.User;
 import vue.DashboardView;
 import vue.EmpruntView;
 import vue.LivreView;
-import vue.ParamètresView;
+import vue.ParametresView;
 import vue.RapportView;
 import vue.UserView;
 import vue.MessagesView;
@@ -23,7 +24,6 @@ public class StylishWindow extends JFrame {
     private boolean isDarkMode = true; // Flag pour le mode actuel
     private int unreadNotifications = 5; // Nombre de notifications non lues
     private User user; 
-    
     public StylishWindow(User user) {
         // Configuration de base de la fenêtre
         setTitle("Card Style Tabs");
@@ -128,20 +128,22 @@ public class StylishWindow extends JFrame {
         tabbedPane.setFont(new Font("Arial", Font.PLAIN, 14)); 
         
         
-        // Ajout des onglets avec des vues spécifiques en fonction du rôle
+     // Ajout des onglets avec des vues spécifiques en fonction du rôle
         tabbedPane.addTab("Home", new DashboardView(user));
-        if ("Bibliothécaire".equals(user.getRole())) {
+
+        if (user.getRole() == Role.BIBLIOTHECAIRE) {
             tabbedPane.addTab("Books", new LivreView(this, user));
             tabbedPane.addTab("Members", new UserView());
             tabbedPane.addTab("Loans", new EmpruntView());
-            tabbedPane.addTab("Settings", new ParamètresView());
+            tabbedPane.addTab("Settings", new ParametresView(user, null)); // Passer l'objet User // Passer l'objet User et UserView// Passer l'objet User
             tabbedPane.addTab("Rapport", new RapportView());
             tabbedPane.addTab("Rappels", new RemindersView());
             tabbedPane.addTab("Messages", new MessagesView());
-        } else if ("Membre".equals(user.getRole())) {
+        } else if (user.getRole() == Role.MEMBRE) {
             tabbedPane.addTab("Books", new LivreView(this, user));
+            tabbedPane.addTab("Settings", new ParametresView(user, null)); // Passer l'objet User // Passer l'objet User et UserView // Passer l'objet User
             // D'autres onglets spécifiques aux membres peuvent être ajoutés ici
-        }
+        
 
         // Ajout de la fenêtre
         add(headerPanel, BorderLayout.NORTH);
@@ -150,8 +152,8 @@ public class StylishWindow extends JFrame {
         // Appliquer le thème Dracula par défaut
         applyDraculaTheme();
 
-        setVisible(true);
-    }
+        setVisible(true);}
+        }
 
     public boolean isDarkMode() {
         return isDarkMode;
@@ -203,7 +205,7 @@ public class StylishWindow extends JFrame {
             } catch (UnsupportedLookAndFeelException e) {
                 e.printStackTrace();
             }
-            User currentUser = new User("John", "Doe", "john.doe@example.com", "password123", "Bibliothécaire");
+            User currentUser = new User("John", "Doe", "john.doe@example.com", "password123", Role.BIBLIOTHECAIRE);
             new StylishWindow(currentUser); // Créer la fenêtre après avoir appliqué le Look and Feel
         });
     }

@@ -5,13 +5,13 @@ public class User {
 	    private String prenom;
 	    private String email;
 	    private String motDePasse;
-	    private String role;
+	    private Role role;
 //Constructor
-	    public User(String nom, String prenom, String email, String motDePasse, String role) {
+	    public User(String nom, String prenom, String email, String motDePasse, Role role) {
 	        this.nom = nom;
 	        this.prenom = prenom;
 	        this.email = email;
-	        this.motDePasse = motDePasse;
+	        this.setMotDePasse(motDePasse);
 	        this.role = role;
 	    }
 
@@ -25,10 +25,17 @@ public class User {
 	    public String getEmail() { return email; }
 	    public void setEmail(String email) { this.email = email; }
 
-	    public String getMotDePasse() { return motDePasse; }
-	    public void setMotDePasse(String motDePasse) { this.motDePasse = motDePasse; }
+	 
+	    public Role getRole() { return role; }
+	    public void setRole(Role role) { this.role = role; }
 
-	    public String getRole() { return role; }
-	    public void setRole(String role) { this.role = role; }
+		public String getMotDePasse() {
+			return motDePasse;
+		}
 
+		public void setMotDePasse(String motDePasse) {
+			this.motDePasse = motDePasse;
+		}
+
+		 
 }
