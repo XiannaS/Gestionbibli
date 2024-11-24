@@ -17,8 +17,11 @@ public class SearchBar extends JPanel {
     private JPanel filterPanel;
     private JTextField searchField;
     private SearchListener searchListener; // Champ pour l'écouteur
+    private String userRole; // Rôle de l'utilisateur
 
-    public SearchBar() {
+    public SearchBar(String userRole) {
+        this.userRole = userRole; // Initialiser le rôle de l'utilisateur
+
         // Configuration de la barre de recherche
         setLayout(new FlowLayout());
         setPreferredSize(new Dimension(400, 100)); // Ajustez selon vos besoins
@@ -27,8 +30,14 @@ public class SearchBar extends JPanel {
         searchField = new JTextField(20);
         searchField.setPreferredSize(new Dimension(200, 30));
         add(searchField);
+
         // ComboBox pour sélectionner la catégorie
-        String[] categories = {"Livres", "Utilisateurs", "Emprunts"};
+        String[] categories;
+        if ("Membre".equals(userRole)) {
+            categories = new String[]{"Livres"}; // Un membre normal n'a accès qu'à "Livres"
+        } else {
+            categories = new String[]{"Livres", "Utilisateurs", "Emprunts"}; // Autres rôles ont accès à toutes les catégories
+        }
         categoryComboBox = new JComboBox<>(categories);
         categoryComboBox.addActionListener(new ActionListener() {
             @Override
@@ -65,7 +74,7 @@ public class SearchBar extends JPanel {
         searchButton.setContentAreaFilled(false);
         searchButton.setFocusPainted(false);
 
-     // Action pour le bouton de recherche
+        // Action pour le bouton de recherche
         searchButton.addActionListener(e -> {
             if (searchListener != null) {
                 // Récupérer les valeurs des filtres
@@ -81,7 +90,7 @@ public class SearchBar extends JPanel {
                     isAvailable = ((JRadioButton) filterPanel.getComponent(5)).isSelected();
                     isUnavailable = ((JRadioButton) filterPanel.getComponent(6)).isSelected();
                 }
-                // Appeler l'écouteur de recherche
+ // Appeler l'écouteur de recherche
                 searchListener.onSearch(searchField.getText(), genre, year, isAvailable, isUnavailable);
             }
         });
@@ -144,7 +153,7 @@ public class SearchBar extends JPanel {
             filterPanel.add(new JLabel("Auteur:"));
             filterPanel.add(new JTextField(10));
 
-        } else if ("Utilisateurs".equals(selectedCategory)) {
+        } else if ("Utilisateurs".equals(selectedCategory) && !"Membre".equals(userRole)) {
             // Nom: JTextField
             filterPanel.add(new JLabel("Nom:"));
             filterPanel.add(new JTextField(10));
@@ -154,7 +163,7 @@ public class SearchBar extends JPanel {
             JComboBox<String> statusComboBox = new JComboBox<>(new String[]{"Tous", "Actif", "Inactif"});
             filterPanel.add(statusComboBox);
 
-        } else if ("Emprunts".equals(selectedCategory)) {
+        } else if ("Emprunts".equals(selectedCategory) && !"Membre".equals(userRole)) {
             // Nom de l'utilisateur: JTextField
             filterPanel.add(new JLabel("Nom de l'utilisateur:"));
             filterPanel.add(new JTextField(10));
@@ -179,7 +188,7 @@ public class SearchBar extends JPanel {
         filterPanel.revalidate(); // Revalider le panneau pour afficher les nouveaux composants
         filterPanel.repaint(); // Repeindre le panneau
     }
- 
+
     public String getSearchText() {
         return searchField.getText();
     }
@@ -198,6 +207,7 @@ public class SearchBar extends JPanel {
         // Supposons que le bouton radio "Non disponible" est le sixième composant du filterPanel
         return ((JRadioButton) filterPanel.getComponent(6)).isSelected();
     }
+
     private void applyDraculaTheme() {
         try {
             UIManager.setLookAndFeel(new FlatDraculaIJTheme());

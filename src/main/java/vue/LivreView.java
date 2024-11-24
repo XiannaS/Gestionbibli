@@ -6,7 +6,6 @@ import model.User;
 import style.SearchBar;
 import style.StylishWindow;
 import javax.swing.*;
-
 import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
 
 import java.awt.*;
@@ -18,69 +17,66 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-public class LivreView extends JPanel { // Changez cela pour étendre JPanel
+public class LivreView extends JPanel {
     private static final long serialVersionUID = 1L;
     private LivreController livreController;
     private JButton addButton;
     private SearchBar searchBar; 
     private JScrollPane scrollPane; 
-    private StylishWindow parentWindow; // Référence au JScrollPane
+    private StylishWindow parentWindow;
+    private User user; 
 
-    public LivreView(StylishWindow parentWindow, User user) { // Passez StylishWindow en paramètre
-        this.parentWindow = parentWindow; // Conservez la référence
+    public LivreView(StylishWindow parentWindow, User user) {
+        this.parentWindow = parentWindow;
         livreController = new LivreController();
+        this.user = user; 
         setLayout(new BorderLayout());
-        setBackground(new Color(245, 245, 245));
 
-        // Initialiser SearchBar
-        searchBar = new SearchBar(); 
-        // Ajouter un écouteur d'événements à la SearchBar
+        // Déterminer le rôle de l'utilisateur
+        String userRole = user.getRole();
+		// Initialiser SearchBar
+        searchBar = new SearchBar(userRole); 
         searchBar.addSearchListener((searchText, genre, year, isAvailable, isUnavailable) -> {
-            // Appeler la méthode filtrerLivres du contrôleur
             List<Livre> filteredBooks = livreController.filtrerLivres(searchText.toLowerCase(), isAvailable, isUnavailable, genre);
             chargerLivres(filteredBooks, (JPanel) scrollPane.getViewport().getView());
         });
 
         // Panel d'en-tête
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(new Color(245, 245, 245)); // Fond doux et taupe
-        headerPanel.add(searchBar, BorderLayout.CENTER); // Ajouter la SearchBar au centre
+        headerPanel.setBackground(new Color(50, 50, 50)); // Fond sombre
+        headerPanel.add(searchBar, BorderLayout.CENTER);
 
-        // Bouton d'ajout de livre
-        addButton = new JButton("Ajouter Livre");
-        addButton.setIcon(resizeIcon(loadIcon("/ressources/add-icon.png"), 20, 20)); // Charger et redimensionner l'icône
-        addButton.setFocusPainted(false);
-        addButton.setBackground(Color.decode("#004754"));
-        addButton.setForeground(Color.WHITE);
-        addButton.addActionListener(e -> openAddBookDialog());
+        // Vérifier le rôle de l'utilisateur
+        if (user != null && "Bibliothécaire".equals(user.getRole())) {
+            // Bouton d'ajout de livre
+            addButton = new JButton("Ajouter Livre");
+            addButton.setIcon(resizeIcon(loadIcon("/ressources/add-icon.png"), 20, 20));
+            addButton.setFocusPainted(false);
+            addButton.setForeground(Color.WHITE); // Texte en blanc
+            addButton.addActionListener(e -> openAddBookDialog());
 
-        // Panneau pour les icônes
-        JPanel iconPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        iconPanel.setBackground(new Color(245, 245, 245)); // Fond doux et taupe
-        iconPanel.add(addButton); // Ajouter le bouton d'ajout au panneau d'icônes
-
-        headerPanel.add(iconPanel, BorderLayout.EAST); // Ajouter le panneau d'icônes à l'est
+            // Panneau pour les icônes
+            JPanel iconPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            iconPanel.add(addButton);
+            headerPanel.add(iconPanel, BorderLayout.EAST);
+        }
 
         // Panel pour afficher les livres
         JPanel booksPanel = new JPanel();
         booksPanel.setLayout(new GridLayout(0, 3, 10, 10));
-        booksPanel.setBackground(new Color(245, 245, 245)); // Fond doux et taupe
 
-        scrollPane = new JScrollPane(booksPanel); // Stocker la référence ici
+        scrollPane = new JScrollPane(booksPanel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Ajouter le panneau d'en-tête et le panneau des livres
-        add(headerPanel, BorderLayout.NORTH); // Ajoutez le panneau d'en-tête en haut
-        add(scrollPane, BorderLayout.CENTER); // Ajoutez le panneau des livres
+        add(headerPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
 
         chargerLivres(livreController.lireLivres(), booksPanel);
     }
 
-    public void changeTheme() {
-    	 parentWindow.toggleTheme(); // Appelle la méthode de StylishWindow
-    }
-    
-private void openAddBookDialog() {
+   
+ void openAddBookDialog() {
     JDialog addDialog = new JDialog(parentWindow, "Ajouter un Livre", true);
     addDialog.setSize(400, 600);
     addDialog.setLocationRelativeTo(parentWindow); // Utilisez parentWindow pour centrer
@@ -284,39 +280,51 @@ private void openAddBookDialog() {
     }
 
 
-    private ImageIcon resizeCoverImage(String path) {
-        try {
-            ImageIcon icon = new ImageIcon(path);
-            Image img = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH); // Taille plus grande
-            return new ImageIcon(img);
-        } catch (Exception e) {
-            System.err.println("Error loading cover image from path: " + path);
-            return new ImageIcon(); // Retourne une icône vide si l'image n'est pas trouvée
-        }
+private ImageIcon resizeCoverImage(String path) {
+    try {
+        ImageIcon icon = new ImageIcon(path);
+        // Redimensionner l'image pour la rendre plus grande (par exemple 250x375)
+        Image img = icon.getImage().getScaledInstance(250, 375, Image.SCALE_SMOOTH); // Nouvelle taille
+        return new ImageIcon(img);
+    } catch (Exception e) {
+        System.err.println("Error loading cover image from path: " + path);
+        return new ImageIcon(); // Retourne une icône vide si l'image n'est pas trouvée
     }
-   
-    private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
-        booksPanel.removeAll(); // Supprimez tous les composants existants
-        System.out.println("Nombre de livres à charger: " + livres.size());
+}
 
-        for (Livre livre : livres) {
-            JPanel livrePanel = new JPanel();
-            livrePanel.setLayout(new BorderLayout());
-            livrePanel.setBackground(new Color(245, 245, 245)); // Assurez-vous que le fond est correct
-            livrePanel.setPreferredSize(new Dimension(200, 350));
 
-            String imagePath = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty()
-                ? livre.getImageUrl()
-                : "ressources/default-book.jpeg"; // Chemin par défaut
+private void chargerLivres(List<Livre> livres, JPanel booksPanel) {
+    booksPanel.removeAll(); // Supprimez tous les composants existants
+    System.out.println("Nombre de livres à charger: " + livres.size());
 
-            System.out.println("Chemin de l'image: " + imagePath); // Débogage
+    for (Livre livre : livres) {
+        JPanel livrePanel = new JPanel();
+        livrePanel.setLayout(new BorderLayout());
+        livrePanel.setOpaque(false); // Rendre le panneau transparent
 
-            JLabel imageLabel = new JLabel(resizeCoverImage(imagePath));
-            imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        // Définir le fond en fonction du mode
+        if (parentWindow.isDarkMode()) {
+            livrePanel.setBackground(new Color(40, 42, 54, 200)); // Couleur sombre avec transparence
+        } else {
+            livrePanel.setBackground(new Color(255, 255, 255, 200)); // Fond clair avec transparence
+        }
 
-            livrePanel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
+        livrePanel.setPreferredSize(new Dimension(200, 350));
+
+        String imagePath = livre.getImageUrl() != null && !livre.getImageUrl().isEmpty()
+            ? livre.getImageUrl()
+            : "ressources/default-book.jpeg"; // Chemin par défaut
+
+        System.out.println("Chemin de l'image: " + imagePath); // Débogage
+
+        JLabel imageLabel = new JLabel(resizeCoverImage(imagePath));
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+
+        livrePanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Vérifiez si l'utilisateur est un bibliothécaire
+                if (user != null && "Bibliothécaire".equals(user.getRole())) {
                     if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 1) {
                         int response = JOptionPane.showOptionDialog(livrePanel, 
                             "Voulez-vous modifier ou supprimer ce livre ?", 
@@ -333,31 +341,39 @@ private void openAddBookDialog() {
                             deleteBook(livre);
                         }
                     }
+                } else {
+                    // Si l'utilisateur n'est pas un bibliothécaire, afficher un message ou effectuer une autre action
+                    JOptionPane.showMessageDialog(livrePanel, "Vous n'avez pas les droits nécessaires pour modifier ou supprimer ce livre.", "Accès Refusé", JOptionPane.WARNING_MESSAGE);
                 }
-            });
+            }
+        });
 
-            livrePanel.add(imageLabel, BorderLayout.CENTER);
+        livrePanel.add(imageLabel, BorderLayout.CENTER);
 
-            JPanel textPanel = new JPanel(new GridLayout(2, 1));
-            textPanel.setBackground(new Color(245, 245, 245)); // Assurez-vous que le fond est correct
-            JLabel titleLabel = new JLabel(livre.getTitre(), JLabel.CENTER);
-            titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-            titleLabel.setForeground(new Color(50, 50, 50));
-            JLabel authorLabel = new JLabel(livre.getAuteur(), JLabel.CENTER);
-            authorLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-            authorLabel.setForeground(new Color(50, 50, 50));
-            textPanel.add(titleLabel);
-            textPanel.add(authorLabel);
+        JPanel textPanel = new JPanel(new GridLayout(2, 1));
+        textPanel.setOpaque(false); // Rendre le panneau de texte transparent
 
-            livrePanel.add(textPanel, BorderLayout.SOUTH);
+        JLabel titleLabel = new JLabel(livre.getTitre(), JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setForeground(parentWindow.isDarkMode() ? Color.WHITE : Color.BLACK); // Texte en fonction du mode
 
-            booksPanel.add(livrePanel);
-        }
+        JLabel authorLabel = new JLabel(livre.getAuteur(), JLabel.CENTER);
+        authorLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        authorLabel.setForeground(parentWindow.isDarkMode() ? Color.LIGHT_GRAY : Color.DARK_GRAY); // Texte en fonction du mode
 
-        booksPanel.revalidate(); // Revalider le panneau
-        booksPanel.repaint(); // Redessiner le panneau
+        textPanel.add(titleLabel);
+        textPanel.add(authorLabel);
+
+        livrePanel.add(textPanel, BorderLayout.SOUTH);
+
+        booksPanel.add(livrePanel);
     }
-    
+
+    booksPanel.revalidate(); // Revalider le panneau
+    booksPanel.repaint(); // Redessiner le panneau
+}
+
+
 private void deleteBook(Livre livre) {
     int confirmed = JOptionPane.showConfirmDialog(this, "Êtes-vous sûr de vouloir supprimer ce livre ?", "Confirmation", JOptionPane.YES_NO_OPTION);
     if (confirmed == JOptionPane.YES_OPTION) {
@@ -384,7 +400,8 @@ public static void main(String[] args) {
         view.setVisible(true);
     });
 }
- JLabel createImageLabel(String resourcePath, int width, int height) {
+ 
+JLabel createImageLabel(String resourcePath, int width, int height) {
         // Chargement des images avec ClassLoader
         URL resourceUrl = getClass().getResource(resourcePath);
         if (resourceUrl == null) {

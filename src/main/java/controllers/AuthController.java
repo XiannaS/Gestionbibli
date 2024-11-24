@@ -12,19 +12,21 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import model.User;
+import style.StylishWindow;
 import vue.ConnexionView;
-import vue.DashboardView;
 import vue.InscriptionView;
-import vue.LivreView;
 
 public class AuthController {
     private ConnexionView connexionView;
     private InscriptionView inscriptionView;
+    private StylishWindow stylishWindow;
     private final String fichierCSV = "src/main/resources/ressources/users.csv"; // Nom du fichier CSV contenant les utilisateurs
-
+    private User currentUser ;
+    
     public AuthController(ConnexionView connexionView, InscriptionView inscriptionView) {
         this.connexionView = connexionView;
         this.inscriptionView = inscriptionView;
+        this.stylishWindow = stylishWindow; // Initialisez ici
 
         // Action pour le bouton de connexion
         this.connexionView.getConnexionButton().addActionListener(e -> seConnecter());
@@ -33,7 +35,7 @@ public class AuthController {
         this.connexionView.getInscriptionButton().addActionListener(e -> afficherInscriptionView());
 
         // Action pour le bouton d'inscription dans la vue d'inscription
-        this.inscriptionView.getInscriptionButton().addActionListener(e -> inscrireUser());
+        this.inscriptionView.getInscriptionButton().addActionListener(e -> inscrireUser ());
     }
 
     private void seConnecter() {
@@ -41,15 +43,12 @@ public class AuthController {
         String motDePasse = connexionView.getMotDePasse();
         List<User> users = lireTousLesUsers();
 
-        for (User user : users) {
+        for (User  user : users) {
             if (user.getEmail().equals(email) && user.getMotDePasse().equals(motDePasse)) {
-                if (user.getRole().equals("Bibliothécaire")) {
-                    // Rediriger vers le dashboard du bibliothécaire
-                    new DashboardView(user).setVisible(true);
-                } else {
-                    // Rediriger vers la vue des livres pour l'utilisateur normal
-                    new LivreView(null, user).setVisible(true);
-                }
+                this.currentUser  = user; // Stocker l'utilisateur connecté
+                stylishWindow = new StylishWindow(currentUser ); // Créer StylishWindow avec l'utilisateur connecté
+                stylishWindow.setVisible(true); // Afficher StylishWindow
+
                 connexionView.dispose(); // Fermer la fenêtre de connexion
                 return;
             }
