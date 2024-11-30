@@ -7,40 +7,72 @@ import javax.swing.*;
 import model.Role;
 import model.User;
 import org.mindrot.jbcrypt.BCrypt;
+import java.util.Random;
 
 public class UserController {
     private final String fichierCSV = "src/main/resources/ressources/users.csv";  // Nom du fichier CSV contenant les utilisateurs
 
-    // Méthode pour ajouter un utilisateur
-    public void ajouterUser (User user) {
-        if (user != null) {
-            if (user.getRole() == null) {
-                JOptionPane.showMessageDialog(null, "Rôle invalide.");
-                return;
-            }
-            List<User> users = lireTousLesUsers(); // Récupère tous les utilisateurs
+    
+ // Ajoutez cette méthode à votre classe UserController
+ private String generateRandomId(int length) {
+     String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+     StringBuilder id = new StringBuilder();
+     Random random = new Random();
+     for (int i = 0; i < length; i++) {
+         id.append(characters.charAt(random.nextInt(characters.length())));
+     }
+     return id.toString();
+ }
 
-            // Hachez le mot de passe seulement si l'utilisateur est un administrateur
-            if (user.getRole() == Role.ADMINISTRATEUR  && user.getMotDePasse() != null && !user.getMotDePasse().isEmpty()) {
-                user.setMotDePasse(hashPassword(user.getMotDePasse()));
-            } else {
-                user.setMotDePasse(""); // Assurez-vous que le mot de passe est vide pour les membres
-            }
+ // Ajoutez cette méthode pour vérifier si l'ID existe déjà
+ private boolean idExists(String id) {
+     List<User> users = lireTousLesUsers();
+     for (User  user : users) {
+         if (user.getId().equals(id)) {
+             return true; // L'ID existe déjà
+         }
+     }
+     return false; // L'ID est unique
+ }
 
-            users.add(user);
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
-                for (User  u : users) {
-                    writer.write(u.getId() + "," + u.getNom() + "," + u.getPrenom() + "," +
-                                 u.getEmail() + "," + u.getNumeroTel() + "," +
-                                 u.getMotDePasse() + "," + u.getRole() + "," + u.isStatut());
-                    writer.newLine();
-                }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "Erreur lors de l'ajout de l'utilisateur : " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
+ // Modifiez la méthode ajouterUser 
+ public void ajouterUser (User user) {
+     if (user != null) {
+         if (user.getRole() == null) {
+             JOptionPane.showMessageDialog(null, "Rôle invalide.");
+             return;
+         }
+         
+         // Générer un nouvel ID unique de 4 caractères
+         String newId;
+         do {
+             newId = generateRandomId(4);
+         } while (idExists(newId)); // Vérifiez que l'ID n'existe pas déjà
+         user.setId(newId); // Assignez l'ID généré à l'utilisateur
+
+         List<User> users = lireTousLesUsers(); // Récupère tous les utilisateurs
+
+         // Hachez le mot de passe seulement si l'utilisateur est un administrateur
+         if (user.getRole() == Role.ADMINISTRATEUR && user.getMotDePasse() != null && !user.getMotDePasse().isEmpty()) {
+             user.setMotDePasse(hashPassword(user.getMotDePasse()));
+         } else {
+             user.setMotDePasse(""); // Assurez-vous que le mot de passe est vide pour les membres
+         }
+
+         users.add(user);
+         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
+             for (User  u : users) {
+                 writer.write(u.getId() + "," + u.getNom() + "," + u.getPrenom() + "," +
+                              u.getEmail() + "," + u.getNumeroTel() + "," +
+                              u.getMotDePasse() + "," + u.getRole() + "," + u.isStatut());
+                 writer.newLine();
+             }
+         } catch (IOException e) {
+             JOptionPane.showMessageDialog(null, "Erreur lors de l'ajout de l'utilisateur : " + e.getMessage());
+             e.printStackTrace();
+         }
+     }
+ }
 
     // Méthode pour modifier un utilisateur existant
     public boolean modifierUser (String email, User updatedUser ) {

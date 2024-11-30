@@ -151,10 +151,9 @@ public class StylishWindow extends JFrame {
 
         try {
             tabbedPane.addTab("Home", new DashboardView(user));
-            if (user.getRole() == Role.BIBLIOTHECAIRE) {
+            if (user.getRole() == Role.ADMINISTRATEUR) {
                 tabbedPane.addTab("Books", new LivreView(this, user));
                 tabbedPane.addTab("Members", new UserView(user.getRole(), user));
-
                 tabbedPane.addTab("Loans", new EmpruntView());
                 tabbedPane.addTab("Settings", new ParametresView(user, userController, userList)); 
                 tabbedPane.addTab("Rapport", new RapportView());
@@ -163,12 +162,6 @@ public class StylishWindow extends JFrame {
             } else if (user.getRole() == Role.MEMBRE) {
                 tabbedPane.addTab("Books", new LivreView(this, user));
                 tabbedPane.addTab("Settings", new ParametresView(user, userController, userList)); 
-            } else if (user.getRole() == Role.ADMINISTRATEUR) {
-                tabbedPane.addTab("Books", new LivreView(this, user));
-                tabbedPane.addTab("Members", new UserView(user.getRole(), user));
-
-                tabbedPane.addTab("Settings", new ParametresView(user, userController, userList)); // Assurez-vous que userList est passé ici                tabbedPane.addTab("Rapport", new RapportView());
-                tabbedPane.addTab("Messages", new MessagesView());
             }
         } catch (Exception e) {
             e.printStackTrace(); // Affichez l'exception dans la console
