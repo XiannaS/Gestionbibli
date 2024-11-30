@@ -3,6 +3,7 @@ package style;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
 
+import controllers.UserController;
 import model.Role;
 import model.User;
 import vue.DashboardView;
@@ -13,17 +14,21 @@ import vue.RapportView;
 import vue.UserView;
 import vue.MessagesView;
 import vue.RemindersView;
-
+import java.util.List; 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
 public class StylishWindow extends JFrame {
-
+    private UserController userController; // Déclaration de userController
+    private List<User> userList; 
     private static final long serialVersionUID = 1L;
     private boolean isDarkMode = true; // Flag pour le mode actuel
     private int unreadNotifications = 5; // Nombre de notifications non lues
     private User user; 
+    
+    
+    
     public StylishWindow(User user) {
         // Configuration de base de la fenêtre
         setTitle("Card Style Tabs");
@@ -32,11 +37,13 @@ public class StylishWindow extends JFrame {
         setSize(1000, 600); // Taille augmentée
         setLocationRelativeTo(null); // Centrer la fenêtre
         setLayout(new BorderLayout());
-
+        this.user = user;
+        this.userController = userController; // Initialisation de userController
+        this.userList = userList;
         // Panneau pour le logo et la barre de titre
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
-
+ 
         // Panneau pour le logo à gauche
         JPanel logoPanel = new JPanel();
         logoPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0)); // Alignement à gauche sans espace
@@ -126,35 +133,51 @@ public class StylishWindow extends JFrame {
         // Création du panneau des onglets (à gauche)
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.LEFT); // Onglets verticaux à gauche
         tabbedPane.setFont(new Font("Arial", Font.PLAIN, 14)); 
-        
-        
-     // Ajout des onglets avec des vues spécifiques en fonction du rôle
-        tabbedPane.addTab("Home", new DashboardView(user));
 
-        if (user.getRole() == Role.BIBLIOTHECAIRE) {
-            tabbedPane.addTab("Books", new LivreView(this, user));
-            tabbedPane.addTab("Members", new UserView());
-            tabbedPane.addTab("Loans", new EmpruntView());
-            tabbedPane.addTab("Settings", new ParametresView(user, null)); // Passer l'objet User // Passer l'objet User et UserView// Passer l'objet User
-            tabbedPane.addTab("Rapport", new RapportView());
-            tabbedPane.addTab("Rappels", new RemindersView());
-            tabbedPane.addTab("Messages", new MessagesView());
-        } else if (user.getRole() == Role.MEMBRE) {
-            tabbedPane.addTab("Books", new LivreView(this, user));
-            tabbedPane.addTab("Settings", new ParametresView(user, null)); // Passer l'objet User // Passer l'objet User et UserView // Passer l'objet User
-            // D'autres onglets spécifiques aux membres peuvent être ajoutés ici
-        
-
-        // Ajout de la fenêtre
-        add(headerPanel, BorderLayout.NORTH);
-        add(tabbedPane, BorderLayout.CENTER);
-
-        // Appliquer le thème Dracula par défaut
-        applyDraculaTheme();
-
-        setVisible(true);}
+        try {
+        	if (user.getRole() == Role.BIBLIOTHECAIRE || user.getRole() == Role.ADMINISTRATEUR) {
+        	    tabbedPane.addTab("Members", new UserView(user.getRole(), user)); // Utilisez seulement le Role
+        	}
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
+        add(tabbedPane, BorderLayout.CENTER);
+        setVisible(true);
+   
+     // Ajoutez le headerPanel à la fenêtre
+        add(headerPanel, BorderLayout.NORTH); // Ajoutez le panneau d'en-tête en haut
+     // Ajout des onglets avec des vues spécifiques en fonction du rôle
+
+        try {
+            tabbedPane.addTab("Home", new DashboardView(user));
+            if (user.getRole() == Role.BIBLIOTHECAIRE) {
+                tabbedPane.addTab("Books", new LivreView(this, user));
+                tabbedPane.addTab("Members", new UserView(user.getRole(), user));
+
+                tabbedPane.addTab("Loans", new EmpruntView());
+                tabbedPane.addTab("Settings", new ParametresView(user, userController, userList)); 
+                tabbedPane.addTab("Rapport", new RapportView());
+                tabbedPane.addTab("Rappels", new RemindersView());
+                tabbedPane.addTab("Messages", new MessagesView());
+            } else if (user.getRole() == Role.MEMBRE) {
+                tabbedPane.addTab("Books", new LivreView(this, user));
+                tabbedPane.addTab("Settings", new ParametresView(user, userController, userList)); 
+            } else if (user.getRole() == Role.ADMINISTRATEUR) {
+                tabbedPane.addTab("Books", new LivreView(this, user));
+                tabbedPane.addTab("Members", new UserView(user.getRole(), user));
+
+                tabbedPane.addTab("Settings", new ParametresView(user, userController, userList)); // Assurez-vous que userList est passé ici                tabbedPane.addTab("Rapport", new RapportView());
+                tabbedPane.addTab("Messages", new MessagesView());
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Affichez l'exception dans la console
+        }
+
+        // Ajoutez le tabbedPane à la fenêtre
+        add(tabbedPane, BorderLayout.CENTER);
+        setVisible(true); // Assurez-vous que cel?a est appelé après avoir ajouté tous les composants
+    }
     public boolean isDarkMode() {
         return isDarkMode;
     }
@@ -205,7 +228,7 @@ public class StylishWindow extends JFrame {
             } catch (UnsupportedLookAndFeelException e) {
                 e.printStackTrace();
             }
-            User currentUser = new User("John", "Doe", "john.doe@example.com", "password123", Role.BIBLIOTHECAIRE);
+            User currentUser = new User("John", "Doe", "john.doe@example.com", "password123", Role.ADMINISTRATEUR);
             new StylishWindow(currentUser); // Créer la fenêtre après avoir appliqué le Look and Feel
         });
     }

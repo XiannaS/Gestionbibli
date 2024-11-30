@@ -63,12 +63,12 @@ public class ConnexionView extends JFrame {
 
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        inscriptionButton = new JButton("Inscription");
-        inscriptionButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        inscriptionButton.setBackground(new Color(100, 150, 200));
-        inscriptionButton.setForeground(Color.WHITE);
-        inscriptionButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.add(inscriptionButton);
+      //  inscriptionButton = new JButton("Inscription");
+        //inscriptionButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        //inscriptionButton.setBackground(new Color(100, 150, 200));
+        //inscriptionButton.setForeground(Color.WHITE);
+        //inscriptionButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        //panel.add(inscriptionButton);
 
         add(panel);
     }
@@ -89,10 +89,5 @@ public class ConnexionView extends JFrame {
         return inscriptionButton;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            ConnexionView connexionView = new ConnexionView();
-            connexionView.setVisible(true);
-        });
-    }
+  
 }

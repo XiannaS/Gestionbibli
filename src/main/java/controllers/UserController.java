@@ -6,7 +6,7 @@ import java.util.List;
 import javax.swing.*;
 import model.Role;
 import model.User;
-import org.mindrot.jbcrypt.BCrypt; // Assurez-vous d'avoir cette bibliothèque pour le hachage
+import org.mindrot.jbcrypt.BCrypt;
 
 public class UserController {
     private final String fichierCSV = "src/main/resources/ressources/users.csv";  // Nom du fichier CSV contenant les utilisateurs
@@ -19,12 +19,12 @@ public class UserController {
                 return;
             }
             List<User> users = lireTousLesUsers(); // Récupère tous les utilisateurs
+            user.setMotDePasse(hashPassword(user.getMotDePasse())); // Hachez le mot de passe avant d'ajouter
             users.add(user);
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
                 for (User  u : users) {
-                    String hashedPassword = BCrypt.hashpw(u.getMotDePasse(), BCrypt.gensalt());
                     writer.write(u.getNom() + "," + u.getPrenom() + "," + u.getEmail() + "," +
-                                 hashedPassword + "," + u.getRole());
+                                 u.getMotDePasse() + "," + u.getRole());
                     writer.newLine();
                 }
             } catch (IOException e) {
@@ -34,52 +34,72 @@ public class UserController {
         }
     }
 
- // Méthode pour modifier un utilisateur
- // Méthode pour modifier un utilisateur (sans cryptage du mot de passe)
-    public void modifierUser(User user, String currentPassword) {
-        if (user != null) {
-            List<String> lignes = new ArrayList<>();
-            boolean userTrouve = false;
-            try (BufferedReader reader = new BufferedReader(new FileReader(fichierCSV))) {
-                String ligne;
-                while ((ligne = reader.readLine()) != null) {
-                    String[] details = ligne.split(",");
-                    if (details.length == 5 && details[2].equals(user.getEmail())) {  // Vérifie que l'utilisateur est trouvé par email
-                        // Vérification du mot de passe avant modification
-                        if (!details[3].equals(currentPassword)) {  // Comparaison directe avec le mot de passe actuel
-                            JOptionPane.showMessageDialog(null, "Mot de passe incorrect.");
-                            return;
-                        }
-                        // Mise à jour de l'utilisateur sans cryptage du mot de passe
-                        lignes.add(user.getNom() + "," + user.getPrenom() + "," + user.getEmail() + "," +
-                                   user.getMotDePasse() + "," + user.getRole());
-                        userTrouve = true;
-                    } else {
-                        lignes.add(ligne);  // Si l'utilisateur n'est pas celui que l'on cherche, conserver la ligne
-                    }
+    // Méthode pour modifier un utilisateur existant
+    public boolean modifierUser (String email, User updatedUser ) {
+        List<String> lignes = new ArrayList<>();
+        boolean userModifie = false;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(fichierCSV))) {
+            String ligne;
+            while ((ligne = reader.readLine()) != null) {
+                String[] details = ligne.split(",");
+                if (details.length == 5 && details[2].equals(email)) { // Utilisateur trouvé
+                    userModifie = true;
+                    // Hachez le mot de passe mis à jour
+                    String hashedPassword = hashPassword(updatedUser .getMotDePasse());
+                    // Remplacez l'utilisateur par ses nouvelles informations
+                    String nouvelleLigne = updatedUser .getNom() + "," +
+                                           updatedUser .getPrenom() + "," +
+                                           updatedUser .getEmail() + "," +
+                                           hashedPassword + "," +
+                                           updatedUser .getRole();
+                    lignes.add(nouvelleLigne);
+                } else {
+                    lignes.add(ligne); // Conservez les autres utilisateurs
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Erreur lors de la lecture du fichier : " + e.getMessage());
+            return false;
+        }
+
+        if (userModifie) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
+                for (String l : lignes) {
+                    writer.write(l);
+                    writer.newLine();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Erreur lors de l'écriture dans le fichier : " + e.getMessage());
+                return false;
             }
-
-            if (userTrouve) {
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
-                    for (String l : lignes) {
-                        writer.write(l);
-                        writer.newLine();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                JOptionPane.showMessageDialog(null, "Utilisateur non trouvé.");
-            }
+            JOptionPane.showMessageDialog(null, "Utilisateur modifié avec succès.");
+            return true;
+        } else {
+            JOptionPane.showMessageDialog(null, "Utilisateur non trouvé.");
+            return false;
         }
     }
 
-
     // Méthode pour supprimer un utilisateur
-    public void supprimerUser (String email) {
+    public void supprimerUser (String email, User currentUser ) {
+        if (currentUser .getRole() != Role.ADMINISTRATEUR) {
+            JOptionPane.showMessageDialog(null, "Seul un administrateur peut supprimer un utilisateur.");
+            return;
+        }
+
+        // Récupérer l'utilisateur à partir de l'email pour l'archiver
+        User userToDelete = getUserByEmail(email);
+        if (userToDelete == null) {
+            JOptionPane.showMessageDialog(null, "Utilisateur non trouvé.");
+            return;
+        }
+
+        // Archive l'utilisateur
+        archiveUser (userToDelete);
+
         List<String> lignes = new ArrayList<>();
         boolean userSupprime = false;
 
@@ -87,10 +107,10 @@ public class UserController {
             String ligne;
             while ((ligne = reader.readLine()) != null) {
                 String[] details = ligne.split(",");
-                if (details.length == 5 && details[2].equals(email)) {  // Vérifie que l'utilisateur est valide
-                    userSupprime = true;
+                if (details.length == 5 && details[2].equals(email)) {
+                    userSupprime = true; // Utilisateur trouvé pour suppression
                 } else {
-                    lignes.add(ligne);
+                    lignes.add(ligne); // Conserver les autres utilisateurs
                 }
             }
         } catch (IOException e) {
@@ -103,6 +123,7 @@ public class UserController {
                     writer.write(l);
                     writer.newLine();
                 }
+                JOptionPane.showMessageDialog(null, "Utilisateur supprimé avec succès.");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -111,6 +132,33 @@ public class UserController {
         }
     }
 
+    // Méthode pour archiver l'utilisateur
+    private void archiveUser (User user) {
+        // Implémentez votre logique d'archivage ici
+        // Par exemple, vous pouvez écrire l'utilisateur dans un fichier d'archive
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/ressources/archived_users.csv", true))) {
+            writer.write(user.getNom() + "," + user.getPrenom() + "," + user.getEmail() + "," + user.getNumeroTel() + "," + user.getRole());
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Méthode pour récupérer un utilisateur par email
+    public User getUserByEmail(String email) {
+        List<User> users = lireTousLesUsers();
+        for (User  user : users) {
+            if (user.getEmail().equals(email)) {
+                return user;
+            }
+        }
+        return null; // Utilisateur non trouvé
+    }
+ 
+ 
+    
+    
+    
     // Méthode pour lire tous les utilisateurs depuis le fichier CSV
     public List<User> lireTousLesUsers() {
         List<User> users = new ArrayList<>();
@@ -118,13 +166,11 @@ public class UserController {
             String ligne;
             while ((ligne = reader.readLine()) != null) {
                 String[] details = ligne.split(",");
-                // Vérifiez que chaque ligne contient exactement 5 éléments avant de créer un utilisateur
                 if (details.length == 5) {
                     Role role = Role.valueOf(details[4]); // Convertir la chaîne en énumération Role
                     User user = new User(details[0], details[1], details[2], details[3], role);
                     users.add(user);
                 } else {
-                    // Afficher un avertissement ou ignorer la ligne si elle est mal formatée
                     System.out.println("Ligne ignorée : Mauvais format - " + ligne);
                 }
             }
@@ -133,4 +179,57 @@ public class UserController {
         }
         return users;
     }
+
+    // Méthode pour hacher un mot de passe
+    private String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+
+    public boolean submitRoleChangeRequest(User currentUser, User userToChange, Role newRole, String justification) {
+        if (currentUser.getRole() != Role.ADMINISTRATEUR) {
+            JOptionPane.showMessageDialog(null, "Seul un administrateur peut modifier le rôle d'un utilisateur.");
+            return false;
+        }
+        if (userToChange == null || newRole == null) {
+            JOptionPane.showMessageDialog(null, "Utilisateur ou rôle invalide.");
+            return false;
+        }
+
+        // Changez le rôle de l'utilisateur
+        userToChange.setRole(newRole);
+
+        // Mettez à jour le fichier CSV
+        List<User> users = lireTousLesUsers(); // Récupérez tous les utilisateurs
+        boolean userFound = false;
+
+        for (User  user : users) {
+            if (user.getEmail().equals(userToChange.getEmail())) {
+                userFound = true;
+                break;
+            }
+        }
+
+        if (!userFound) {
+            JOptionPane.showMessageDialog(null, "Utilisateur non trouvé dans le fichier.");
+            return false;
+        }
+
+        // Écrire les utilisateurs mis à jour dans le fichier CSV
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
+            for (User user : users) {
+                // Ne pas hacher le mot de passe à nouveau
+                String passwordToWrite = user.getMotDePasse(); // Utiliser le mot de passe existant
+                writer.write(user.getNom() + "," + user.getPrenom() + "," + user.getEmail() + "," +
+                             passwordToWrite + "," + user.getRole());
+                writer.newLine();
+            }
+            JOptionPane.showMessageDialog(null, "Rôle changé avec succès.");
+            return true;
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Erreur lors de l'écriture dans le fichier : " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+ 
 }

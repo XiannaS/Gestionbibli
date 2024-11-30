@@ -22,6 +22,7 @@ public class Main {
 
         // Initialisation des vues et du contrôleur
         ConnexionView connexionView = new ConnexionView();
+        
         InscriptionView inscriptionView = new InscriptionView();
         AuthController authController = new AuthController(connexionView, inscriptionView);
 
