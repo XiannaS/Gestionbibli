@@ -30,7 +30,7 @@ public class App {
                     String email = donnees[3];
                     String motDePasse = donnees[4];
                     Role role = Role.valueOf(donnees[5]);
-                    User user = new User(nom, prenom, email, motDePasse, role);
+                    User user = new User(id,nom, prenom, email, motDePasse, motDePasse, role, false);
                     user.setId(id);
                     users.add(user);
                 } else {

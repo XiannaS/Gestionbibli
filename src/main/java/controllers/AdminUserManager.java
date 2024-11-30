@@ -31,7 +31,7 @@ public class AdminUserManager {
         }
 
         // Création de l'utilisateur Administrateur
-        User admin = new User(nom, prenom, email, hashMotDePasse(motDePasse), Role.ADMINISTRATEUR);
+        User admin = new User(nom, prenom, email, hashMotDePasse(motDePasse), motDePasse, motDePasse, Role.ADMINISTRATEUR, false);
 
         // Ajout de l'utilisateur dans le fichier CSV
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV, true))) {

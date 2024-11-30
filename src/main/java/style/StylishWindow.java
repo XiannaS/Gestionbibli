@@ -228,10 +228,16 @@ public class StylishWindow extends JFrame {
             } catch (UnsupportedLookAndFeelException e) {
                 e.printStackTrace();
             }
-            User currentUser = new User("John", "Doe", "john.doe@example.com", "password123", Role.ADMINISTRATEUR);
-            new StylishWindow(currentUser); // Créer la fenêtre après avoir appliqué le Look and Feel
+
+            // Définir la variable actif
+            boolean actif = true; // ou false, selon votre logique
+
+            // Créer un utilisateur avec les informations nécessaires
+            User currentUser  = new User("22", "John", "Doe", "john.doe@example.com", "999", "password123", Role.ADMINISTRATEUR, true);
+            
+            // Créer la fenêtre après avoir appliqué le Look and Feel
+            new StylishWindow(currentUser );
         });
     }
-
 
 }

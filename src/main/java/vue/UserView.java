@@ -12,11 +12,11 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import java.util.UUID;
 
 public class UserView extends JPanel {
 
     private static final long serialVersionUID = 1L;
-    private JTextField nomField;
     private JTextField prenomField;
     private JTextField emailField;
     private JTextField numeroTelField;
@@ -27,10 +27,7 @@ public class UserView extends JPanel {
     private SearchBar searchBar;
     private User currentUser ;
     private UserController userController;
-    private Role currentUserRole;
-
     public UserView(Role currentUserRole, User currentUser ) {
-        this.currentUserRole = currentUserRole;
         this.userController = new UserController();
         this.currentUser  = currentUser ;
         initComponents();
@@ -44,7 +41,7 @@ public class UserView extends JPanel {
     }
 
     private void initComponents() {
-        nomField = new JTextField(15);
+        new JTextField(15);
         prenomField = new JTextField(15);
         emailField = new JTextField(15);
         numeroTelField = new JTextField(15);
@@ -59,7 +56,7 @@ public class UserView extends JPanel {
         usersTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int row = usersTable.rowAtPoint(e.getPoint());
+                usersTable.rowAtPoint(e.getPoint());
                 int column = usersTable.columnAtPoint(e.getPoint());
 
                 if (column == 6) { // Colonne Modifier
@@ -102,31 +99,8 @@ public class UserView extends JPanel {
     }
 
     private void ajouterUtilisateur() {
-        String nom = nomField.getText();
-        String prenom = prenomField.getText();
-        String email = emailField.getText();
-        String numeroTel = numeroTelField.getText();
-        Role role = (Role) roleComboBox.getSelectedItem();
-        boolean actif = statutCheckBox.isSelected();
-
-        if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || numeroTel.isEmpty() || role == null) {
-            JOptionPane.showMessageDialog(this, "Tous les champs sont obligatoires.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        User newUser  = new User(nom, prenom, email, numeroTel, role, actif, actif);
-        userController.ajouterUser (newUser );
- tableModel.addRow(new Object[]{nom, prenom, email, numeroTel, role, actif ? "Actif" : "Inactif"});
-        resetFields();
-    }
-
-    private void resetFields() {
-        nomField.setText("");
-        prenomField.setText("");
-        emailField.setText("");
-        numeroTelField.setText("");
-        roleComboBox.setSelectedIndex(0);
-        statutCheckBox.setSelected(false);
+        UserAddDialog addDialog = new UserAddDialog(this);
+        addDialog.setVisible(true);
     }
 
     private void modifierUtilisateur() {
@@ -144,12 +118,12 @@ public class UserView extends JPanel {
             return;
         }
 
-        // Passer le parent comme JFrame
-        UserEditDialog editDialog = new UserEditDialog((JFrame) SwingUtilities.getWindowAncestor(this), userToEdit);
+        // Passer l'instance de UserView
+        UserEditDialog editDialog = new UserEditDialog(this, userToEdit);
         editDialog.setVisible(true);
-        loadUsers();
+        // Note: loadUsers() est déjà appelé dans le UserEditDialog après l'enregistrement
     }
-
+    
     private void supprimerUtilisateur() {
         int selectedRow = usersTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -186,7 +160,6 @@ public class UserView extends JPanel {
             return cell;
         }
     }
-
     private void loadUsers() {
         List<User> users = userController.lireTousLesUsers();
         tableModel.setRowCount(0);
@@ -200,61 +173,143 @@ public class UserView extends JPanel {
                 user.getEmail(),
                 user.getNumeroTel(),
                 user.getRole(),
-                user.isActif() ? "Actif" : "Inactif",
-                editIcon,
-                deleteIcon
+                user.isStatut() ? "Actif" : "Inactif",
+                editIcon,  // Colonne pour l'icône de modification
+                deleteIcon // Colonne pour l'icône de suppression
             });
         }
+
+        // Appliquer le renderer aux colonnes d'icônes
+        usersTable.getColumnModel().getColumn(6).setCellRenderer(new IconCellRenderer()); // Modifier
+        usersTable.getColumnModel().getColumn(7).setCellRenderer(new IconCellRenderer()); // Supprimer
     }
+    
+public class UserEditDialog extends JDialog {
+    private JTextField nomField;
+    private JTextField prenomField;
+    private JTextField emailField;
+    private JTextField numeroTelField;
+    private JComboBox<Role> roleComboBox;
+    private JCheckBox statutCheckBox;
+    private User userToEdit;
+    public UserEditDialog(UserView userView, User user) {
+        super(); // Passer userView ici
+        this.userToEdit = user;
 
-    public class UserEditDialog extends JDialog {
-        private JTextField nomField;
-        private JTextField prenomField;
-        private JTextField emailField;
-        private JTextField numeroTelField;
-        private JComboBox<Role> roleComboBox;
-        private JCheckBox statutCheckBox;
-        private User userToEdit;
+        nomField = new JTextField(user.getNom(), 15);
+        prenomField = new JTextField(user.getPrenom(), 15);
+        emailField = new JTextField(user.getEmail(), 15);
+        numeroTelField = new JTextField(user.getNumeroTel(), 15);
+        roleComboBox = new JComboBox<>(Role.values());
+        roleComboBox.setSelectedItem(user.getRole());
+        statutCheckBox = new JCheckBox("Actif", user.isStatut());
 
-        public UserEditDialog(Frame parent, User user) {
-            super(parent, "Modifier l'utilisateur", true);
-            this.userToEdit = user;
+        setLayout(new GridLayout(6, 2));
+        add(new JLabel("Nom:"));
+        add(nomField);
+        add(new JLabel("Prénom:"));
+        add(prenomField);
+        add(new JLabel("Email:"));
+        add(emailField);
+        add(new JLabel("Téléphone:"));
+        add(numeroTelField);
+        add(new JLabel("Rôle:"));
+        add(roleComboBox);
+        add(statutCheckBox);
 
-            nomField = new JTextField(user.getNom(), 15);
-            prenomField = new JTextField(user.getPrenom(), 15);
-            emailField = new JTextField(user.getEmail(), 15);
-            numeroTelField = new JTextField(user.getNumeroTel(), 15);
-            roleComboBox = new JComboBox<>(Role.values());
-            roleComboBox.setSelectedItem(user.getRole());
-            statutCheckBox = new JCheckBox("Actif", user.isActif());
+        JButton saveButton = new JButton("Enregistrer");
+        saveButton.addActionListener(e -> {
+            userToEdit.setNom(nomField.getText());
+            userToEdit.setPrenom(prenomField.getText());
+            userToEdit.setEmail(emailField.getText());
+            userToEdit.setNumeroTel(numeroTelField.getText());
+            userToEdit.setRole((Role) roleComboBox.getSelectedItem());
+            userToEdit.setStatut(rootPaneCheckingEnabled);
+         // Appeler la méthode pour mettre à jour l'utilisateur dans le contrôleur
+            userView.getUserController().modifierUser (userToEdit.getEmail(), userToEdit); // Assurez-vous que cette méthode existe
 
-            setLayout(new GridLayout(6, 2));
-            add(new JLabel("Nom:"));
-            add(nomField);
-            add(new JLabel("Prénom:"));
-            add(prenomField);
-            add(new JLabel("Email:"));
-            add(emailField);
-            add(new JLabel("Téléphone:"));
-            add(numeroTelField);
-            add(new JLabel("Rôle:"));
-            add(roleComboBox);
-            add(statutCheckBox);
+            userView.loadUsers(); // Mettre à jour le tableau après l'enregistrement
+            dispose();
+        });
+        add(saveButton);
 
-            JButton saveButton = new JButton("Enregistrer");
-            saveButton.addActionListener(e -> {
-                userToEdit.setNom(nomField.getText());
-                userToEdit.setPrenom(prenomField.getText());
-                userToEdit.setEmail(emailField.getText());
-                userToEdit.setNumeroTel(numeroTelField.getText());
-                userToEdit.setRole((Role) roleComboBox.getSelectedItem());
-                userToEdit.setActif(statutCheckBox.isSelected());
-                dispose();
-            });
-            add(saveButton);
-
-            pack();
-            setLocationRelativeTo(parent);
-        }
+        pack();
+        setLocationRelativeTo(userView);
     }
+}
+public UserController getUserController() {
+    return userController;
+}
+ 
+public class UserAddDialog extends JDialog {
+    private JTextField prenomField; // Inversé
+    private JTextField nomField; // Inversé
+    private JTextField emailField;
+    private JTextField numeroTelField;
+    private JCheckBox statutCheckBox;
+    private UserView userView;
+
+    public UserAddDialog(UserView userView) {
+        super();
+        this.userView = userView;
+
+        prenomField = new JTextField(15);
+        nomField = new JTextField(15);
+        emailField = new JTextField(15);
+        numeroTelField = new JTextField(15);
+        statutCheckBox = new JCheckBox("Actif");
+
+        setLayout(new GridLayout(5, 2)); // Ajusté pour 5 lignes
+        add(new JLabel("Prénom:")); // Inversé
+        add(prenomField); // Inversé
+        add(new JLabel("Nom:")); // Inversé
+        add(nomField); // Inversé
+        add(new JLabel("Email:"));
+        add(emailField);
+        add(new JLabel("Téléphone:"));
+        add(numeroTelField);
+        add(statutCheckBox);
+
+     // Dans UserAddDialog
+        JButton saveButton = new JButton("Enregistrer");
+        saveButton.addActionListener(e -> {
+            String nom = nomField.getText();
+            String prenom = prenomField.getText();
+            String email = emailField.getText();
+            String numeroTel = numeroTelField.getText();
+            boolean actif = statutCheckBox.isSelected(); // Vérifiez si la case est cochée
+
+            // Vérification des champs
+            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || numeroTel.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Tous les champs sont obligatoires.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Vérification de l'email
+            if (userView.getUserController().getUserByEmail(email) != null) {
+                JOptionPane.showMessageDialog(this, "L'email existe déjà.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Vérification du numéro de téléphone (doit être numérique)
+            if (!numeroTel.matches("\\d+")) {
+                JOptionPane.showMessageDialog(this, "Le numéro de téléphone doit contenir uniquement des chiffres.", "Erreur", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Générer un identifiant unique pour l'utilisateur
+            String id = UUID.randomUUID().toString(); // Génération d'un UUID
+
+            // Créer un nouvel utilisateur avec le rôle "Membre"
+            User newUser  = new User(id, nom, prenom, email, numeroTel, "", Role.MEMBRE, actif); // Assurez-vous que le constructeur de User accepte ces paramètres
+            userView.getUserController().ajouterUser (newUser );
+            userView.loadUsers(); // Mettre à jour le tableau après l'ajout
+            dispose();
+        });
+        add(saveButton);
+
+        pack();
+        setLocationRelativeTo(userView);
+    }
+}
 }

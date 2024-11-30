@@ -19,12 +19,20 @@ public class UserController {
                 return;
             }
             List<User> users = lireTousLesUsers(); // Récupère tous les utilisateurs
-            user.setMotDePasse(hashPassword(user.getMotDePasse())); // Hachez le mot de passe avant d'ajouter
+
+            // Hachez le mot de passe seulement si l'utilisateur est un administrateur
+            if (user.getRole() == Role.ADMINISTRATEUR  && user.getMotDePasse() != null && !user.getMotDePasse().isEmpty()) {
+                user.setMotDePasse(hashPassword(user.getMotDePasse()));
+            } else {
+                user.setMotDePasse(""); // Assurez-vous que le mot de passe est vide pour les membres
+            }
+
             users.add(user);
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
                 for (User  u : users) {
-                    writer.write(u.getNom() + "," + u.getPrenom() + "," + u.getEmail() + "," +
-                                 u.getMotDePasse() + "," + u.getRole());
+                    writer.write(u.getId() + "," + u.getNom() + "," + u.getPrenom() + "," +
+                                 u.getEmail() + "," + u.getNumeroTel() + "," +
+                                 u.getMotDePasse() + "," + u.getRole() + "," + u.isStatut());
                     writer.newLine();
                 }
             } catch (IOException e) {
@@ -43,46 +51,47 @@ public class UserController {
             String ligne;
             while ((ligne = reader.readLine()) != null) {
                 String[] details = ligne.split(",");
-                if (details.length == 5 && details[2].equals(email)) { // Utilisateur trouvé
+                if (details.length == 8 && details[3].equals(email)) { // Vérifiez que vous attendez 8 colonnes
                     userModifie = true;
-                    // Hachez le mot de passe mis à jour
-                    String hashedPassword = hashPassword(updatedUser .getMotDePasse());
-                    // Remplacez l'utilisateur par ses nouvelles informations
-                    String nouvelleLigne = updatedUser .getNom() + "," +
-                                           updatedUser .getPrenom() + "," +
-                                           updatedUser .getEmail() + "," +
+
+                    // Hachez le mot de passe mis à jour seulement si l'utilisateur est un administrateur
+                    String hashedPassword = (updatedUser .getRole() == Role.ADMINISTRATEUR  && updatedUser .getMotDePasse() != null && !updatedUser .getMotDePasse().isEmpty())
+                            ? hashPassword(updatedUser .getMotDePasse())
+                            : ""; // Laissez-le vide pour les membres
+
+     // Remplacez l'utilisateur par ses nouvelles informations
+                    String nouvelleLigne = updatedUser  .getId() + "," +
+                                           updatedUser  .getNom() + "," +
+                                           updatedUser  .getPrenom() + "," +
+                                           updatedUser  .getEmail() + "," +
+                                           updatedUser  .getNumeroTel() + "," +
                                            hashedPassword + "," +
-                                           updatedUser .getRole();
+                                           updatedUser  .getRole() + "," +
+                                           updatedUser  .isStatut();
                     lignes.add(nouvelleLigne);
                 } else {
                     lignes.add(ligne); // Conservez les autres utilisateurs
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Erreur lors de la lecture du fichier : " + e.getMessage());
-            return false;
-        }
 
-        if (userModifie) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
-                for (String l : lignes) {
-                    writer.write(l);
-                    writer.newLine();
+            if (userModifie) {
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
+                    for (String l : lignes) {
+                        writer.write(l);
+                        writer.newLine();
+                    }
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(null, "Erreur lors de la modification de l'utilisateur : " + e.getMessage());
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Erreur lors de l'écriture dans le fichier : " + e.getMessage());
-                return false;
             }
-            JOptionPane.showMessageDialog(null, "Utilisateur modifié avec succès.");
-            return true;
-        } else {
-            JOptionPane.showMessageDialog(null, "Utilisateur non trouvé.");
-            return false;
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Erreur lors de la lecture du fichier : " + e.getMessage());
+            e.printStackTrace();
         }
+        return userModifie;
     }
-
+    
     // Méthode pour supprimer un utilisateur
     public void supprimerUser (String email, User currentUser ) {
         if (currentUser .getRole() != Role.ADMINISTRATEUR) {
@@ -155,10 +164,6 @@ public class UserController {
         return null; // Utilisateur non trouvé
     }
  
- 
-    
-    
-    
     // Méthode pour lire tous les utilisateurs depuis le fichier CSV
     public List<User> lireTousLesUsers() {
         List<User> users = new ArrayList<>();
@@ -166,70 +171,41 @@ public class UserController {
             String ligne;
             while ((ligne = reader.readLine()) != null) {
                 String[] details = ligne.split(",");
-                if (details.length == 5) {
-                    Role role = Role.valueOf(details[4]); // Convertir la chaîne en énumération Role
-                    User user = new User(details[0], details[1], details[2], details[3], role);
-                    users.add(user);
+                if (details.length == 8) { // Assurez-vous que vous attendez 8 colonnes
+                    try {
+                        String id = details[0]; // Lire l'identifiant
+                        String nom = details[1];
+                        String prenom = details[2];
+                        String email = details[3];
+                        String numeroTel = details[4]; // Lire le numéro de téléphone
+                        String motDePasse = details[5]; // Haché ou vide
+                        Role role = Role.valueOf(details[6].toUpperCase()); // Convertir la chaîne en énumération Role
+                        boolean statut = Boolean.parseBoolean(details[7]); // Lire le statut
+
+                        // Créez l'utilisateur avec tous les champs, y compris l'identifiant
+                        User user = new User(id, nom, prenom, email, numeroTel, motDePasse, role, statut);
+                        users.add(user);
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Rôle inconnu dans la ligne : " + ligne);
+                    }
                 } else {
-                    System.out.println("Ligne ignorée : Mauvais format - " + ligne);
+                    System.err.println("Ligne ignorée (format incorrect) : " + ligne);
                 }
             }
+            System.out.println("Nombre d'utilisateurs lus : " + users.size());
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "Le fichier des utilisateurs est introuvable : " + e.getMessage());
         } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Erreur lors de la lecture des utilisateurs : " + e.getMessage());
             e.printStackTrace();
         }
         return users;
     }
-
+    
     // Méthode pour hacher un mot de passe
     private String hashPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
-    public boolean submitRoleChangeRequest(User currentUser, User userToChange, Role newRole, String justification) {
-        if (currentUser.getRole() != Role.ADMINISTRATEUR) {
-            JOptionPane.showMessageDialog(null, "Seul un administrateur peut modifier le rôle d'un utilisateur.");
-            return false;
-        }
-        if (userToChange == null || newRole == null) {
-            JOptionPane.showMessageDialog(null, "Utilisateur ou rôle invalide.");
-            return false;
-        }
-
-        // Changez le rôle de l'utilisateur
-        userToChange.setRole(newRole);
-
-        // Mettez à jour le fichier CSV
-        List<User> users = lireTousLesUsers(); // Récupérez tous les utilisateurs
-        boolean userFound = false;
-
-        for (User  user : users) {
-            if (user.getEmail().equals(userToChange.getEmail())) {
-                userFound = true;
-                break;
-            }
-        }
-
-        if (!userFound) {
-            JOptionPane.showMessageDialog(null, "Utilisateur non trouvé dans le fichier.");
-            return false;
-        }
-
-        // Écrire les utilisateurs mis à jour dans le fichier CSV
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
-            for (User user : users) {
-                // Ne pas hacher le mot de passe à nouveau
-                String passwordToWrite = user.getMotDePasse(); // Utiliser le mot de passe existant
-                writer.write(user.getNom() + "," + user.getPrenom() + "," + user.getEmail() + "," +
-                             passwordToWrite + "," + user.getRole());
-                writer.newLine();
-            }
-            JOptionPane.showMessageDialog(null, "Rôle changé avec succès.");
-            return true;
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Erreur lors de l'écriture dans le fichier : " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
  
 }

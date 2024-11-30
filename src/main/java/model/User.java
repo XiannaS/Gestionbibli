@@ -1,36 +1,25 @@
 package model;
 
 public class User {
-    private String id;
+    private String id; // Identifiant unique
     private String nom;
     private String prenom;
     private String email;
     private String numeroTel; // Nouveau champ pour le numéro de téléphone
-    private boolean actif; // Nouveau champ pour indiquer si l'utilisateur est actif ou inactif
-    private String motDePasse;
+    private String motDePasse; // Peut être vide ou nul pour les membres
     private Role role;
     private boolean statut; // Nouveau champ pour le statut
 
-    // Constructeur principal
-    public User(String nom, String prenom, String email, String numeroTel, Role role, boolean actif, boolean statut) {
+    // Constructeur
+    public User(String id, String nom, String prenom, String email, String numeroTel, String motDePasse, Role role, boolean statut) {
+        this.id = id; // Assurez-vous de l'initialiser
         this.nom = nom;
         this.prenom = prenom;
         this.email = email;
-        this.numeroTel = numeroTel;
+        this.numeroTel = numeroTel; // Assurez-vous de l'initialiser
+        this.motDePasse = motDePasse; // Peut être vide ou nul
         this.role = role;
-        this.actif = actif;
-        this.statut = statut; // Initialiser le statut
-    }
-
-    // Ancien constructeur (compatibilité pour les usages existants)
-    public User(String nom, String prenom, String email, String motDePasse, Role role) {
-        this.nom = nom;
-        this.prenom = prenom;
-        this.email = email;
-        this.motDePasse = motDePasse;
-        this.role = role;
-        this.actif = true; // Par défaut, un utilisateur est actif
-        this.statut = true; // Par défaut, le statut est actif
+        this.statut = statut;
     }
 
     // Getters et Setters
@@ -65,15 +54,7 @@ public class User {
     public void setNumeroTel(String numeroTel) {
         this.numeroTel = numeroTel;
     }
-
-    public boolean isActif() {
-        return actif;
-    }
-
-    public void setActif(boolean actif) {
-        this.actif = actif;
-    }
-
+ 
     public Role getRole() {
         return role;
     }
@@ -109,14 +90,13 @@ public class User {
     // Méthode pour afficher une représentation lisible de l'utilisateur
     @Override
     public String toString() {
-        return "User {" +
-                "nom='" + nom + '\'' +
-                ", prenom='" + prenom + '\'' +
-                ", email='" + email + '\'' +
-                ", numeroTel='" + numeroTel + '\'' +
-                ", role=" + role +
-                ", actif=" + actif +
-                ", statut=" + statut + // Inclure le statut dans la représentation
+        return "User  {" +
+                "nom='" + (nom != null ? nom : "N/A") + '\'' +
+                ", prenom='" + (prenom != null ? prenom : "N/A") + '\'' +
+                ", email='" + (email != null ? email : "N/A") + '\'' +
+                ", numeroTel='" + (numeroTel != null ? numeroTel : "N/A") + '\'' +
+                ", role=" + (role != null ? role : "N/A") +
+                ", statut=" + statut + // statut est un booléen, donc il n'y a pas de problème à l'afficher
                 '}';
     }
 }

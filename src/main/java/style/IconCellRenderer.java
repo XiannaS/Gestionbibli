@@ -5,7 +5,12 @@ import java.awt.*;
 
 public class IconCellRenderer extends JLabel implements TableCellRenderer {
 
-    public IconCellRenderer() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public IconCellRenderer() {
         setHorizontalAlignment(JLabel.CENTER);
     }
 
