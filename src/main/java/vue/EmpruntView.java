@@ -2,175 +2,139 @@ package vue;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
+import com.toedter.calendar.JDateChooser;
+
+import controllers.EmpruntController;
+import controllers.UserController;
+import model.Emprunt;
+import model.Livre;
+import model.User;
+
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.time.LocalDate;
+import java.util.List;
 
 public class EmpruntView extends JPanel {
-
     private static final long serialVersionUID = 1L;
-    private JTextField tfIdEmprunt, tfIdUtilisateur, tfIdLivre, tfDateEmprunt, tfDateRetour;
     private JTable tableEmprunts;
     private DefaultTableModel tableModel;
-    private JLabel backgroundLabel;
+    private EmpruntController empruntController;
+    private UserController userController; 
+    private JComboBox<User> cbUser;
+    private JComboBox<Livre> cbLivre;
+    private JDateChooser dateEmpruntChooser;
+    private JDateChooser dateRetourChooser;
 
     public EmpruntView() {
-        // Configuration du panel
+        this.empruntController = new EmpruntController();
+        this.userController = new UserController();
         setLayout(new BorderLayout());
+        initializeComponents();
+        loadUsers();
+        loadLivres();
+        loadEmprunts();
+    }
 
-        // Charger l'image de fond en utilisant le ClassLoader et vérifier si elle est chargée
-        ImageIcon backgroundImage;
-        try {
-            backgroundImage = new ImageIcon(getClass().getClassLoader().getResource("ressources/biblio.png"));
-            // Vérifiez si l'image est bien chargée
-            if (backgroundImage.getIconWidth() == -1) {
-                System.out.println("Image non trouvée : vérifiez le chemin d'accès.");
-            } else {
-                System.out.println("Image chargée avec succès.");
-            }
-        } catch (Exception e) {
-            System.out.println("Erreur lors du chargement de l'image : " + e.getMessage());
-            e.printStackTrace();
-            backgroundImage = null; // En cas d'erreur, définir l'image comme nulle
-        }
+    private void initializeComponents() {
+        // Panel for form inputs
+        JPanel panelForm = new JPanel();
+        panelForm.setLayout(new GridLayout(5, 2, 10, 10));
 
-        // Assurez-vous que l'image a été chargée avant de l'utiliser
-        if (backgroundImage != null) {
-            backgroundLabel = new JLabel(backgroundImage);
-            backgroundLabel.setLayout(new BorderLayout()); // Permet l'ajout de composants par-dessus l'image
-            add(backgroundLabel); // Ajouter le JLabel avec l'image de fond au JPanel
-        } else {
-            System.out.println("Aucune image à afficher en fond.");
-        }
+        // User dropdown
+        panelForm.add(new JLabel("Utilisateur :"));
+        cbUser = new JComboBox<>();
+        panelForm.add(cbUser);
 
-        // Panel principal (superposition des autres composants par-dessus l'image)
-        JPanel panelPrincipal = new JPanel();
-        panelPrincipal.setLayout(new BoxLayout(panelPrincipal, BoxLayout.Y_AXIS));
-        panelPrincipal.setOpaque(false); // Rendre ce panel transparent pour que l'image de fond soit visible
+        // Livre dropdown
+        panelForm.add(new JLabel("Livre :"));
+        cbLivre = new JComboBox<>();
+        panelForm.add(cbLivre);
 
-        // Panel pour l'ajout d'un emprunt
-        JPanel panelAjout = new JPanel();
-        panelAjout.setLayout(new GridLayout(6, 2, 10, 10));
-        panelAjout.setBorder(BorderFactory.createTitledBorder("Ajouter un emprunt"));
-        panelAjout.setOpaque(false); // Rendre ce panel transparent
+        // Date Emprunt
+        panelForm.add(new JLabel("Date d'emprunt :"));
+        dateEmpruntChooser = new JDateChooser();
+        panelForm.add(dateEmpruntChooser);
 
-        // Création des champs de saisie avec fond transparent léger
-        tfIdEmprunt = new JTextField();
-        tfIdUtilisateur = new JTextField();
-        tfIdLivre = new JTextField();
-        tfDateEmprunt = new JTextField();
-        tfDateRetour = new JTextField();
+        // Date Retour
+        panelForm.add(new JLabel("Date de retour :"));
+        dateRetourChooser = new JDateChooser();
+        panelForm.add(dateRetourChooser);
 
-        // Définir une couleur marron pour les labels
-        Color marron = new Color(139, 69, 19); // Marron foncé
-
-        // Ajouter les champs avec des labels marron
-        panelAjout.add(new JLabel("ID Emprunt:"));
-        panelAjout.add(tfIdEmprunt);
-        panelAjout.add(new JLabel("ID Utilisateur:"));
-        panelAjout.add(tfIdUtilisateur);
-        panelAjout.add(new JLabel("ID Livre:"));
-        panelAjout.add(tfIdLivre);
-        panelAjout.add(new JLabel("Date Emprunt (yyyy-MM-dd):"));
-        panelAjout.add(tfDateEmprunt);
-        panelAjout.add(new JLabel("Date Retour (yyyy-MM-dd):"));
-        panelAjout.add(tfDateRetour);
-
-        // Appliquer la couleur marron aux labels
-        for (Component c : panelAjout.getComponents()) {
-            if (c instanceof JLabel) {
-                ((JLabel) c).setForeground(marron);
-                ((JLabel) c).setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie pour les labels
-            }
-        }
-
-        // Définir la transparence légère pour les champs de sais ie
-        setTransparentTextField(tfIdEmprunt);
-        setTransparentTextField(tfIdUtilisateur);
-        setTransparentTextField(tfIdLivre);
-        setTransparentTextField(tfDateEmprunt);
-        setTransparentTextField(tfDateRetour);
-
-        // Bouton pour ajouter un emprunt
+        // Button for adding emprunt
         JButton btnAjouter = new JButton("Ajouter Emprunt");
-        btnAjouter.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ajouterEmprunt();
-            }
+        btnAjouter.addActionListener(e -> ajouterEmprunt());
+        panelForm.add(btnAjouter);
 
-            private void ajouterEmprunt() {
-                // Logique pour ajouter un emprunt (ici on affiche juste les valeurs dans la console)
-                String idEmprunt = tfIdEmprunt.getText();
-                String idUtilisateur = tfIdUtilisateur.getText();
-                String idLivre = tfIdLivre.getText();
-                String dateEmprunt = tfDateEmprunt.getText();
-                String dateRetour = tfDateRetour.getText();
+        add(panelForm, BorderLayout.NORTH);
 
-                // Vous pouvez ajouter ici la logique pour ajouter un emprunt dans le tableau ou dans une base de données.
-                System.out.println("Ajout d'un emprunt : " + idEmprunt + ", " + idUtilisateur + ", " + idLivre + ", " + dateEmprunt + ", " + dateRetour);
-            }
-        });
-        btnAjouter.setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie pour le bouton
-        panelAjout.add(btnAjouter);
-
-        // Ajouter le panelAjout au panelPrincipal
-        panelPrincipal.add(panelAjout);
-
-        // Panel pour afficher les emprunts dans un tableau
-        String[] columnNames = {"ID Emprunt", "ID Utilisateur", "ID Livre", "Date Emprunt", "Date Retour", "Est Rendu"};
-        tableModel = new DefaultTableModel(columnNames, 0);
+        // Table for emprunts
+        tableModel = new DefaultTableModel(new String[]{"ID", "Utilisateur", "Livre", "Date Emprunt", "Date Retour", "Rendu"}, 0);
         tableEmprunts = new JTable(tableModel);
-        JScrollPane scrollTable = new JScrollPane(tableEmprunts);
+        add(new JScrollPane(tableEmprunts), BorderLayout.CENTER);
+    }
 
-        // Rendre le tableau et son fond transparent
-        tableEmprunts.setOpaque(false);
-        tableEmprunts.setBackground(new Color(0, 0, 0, 0)); // Fond transparent
-        JTableHeader header = tableEmprunts.getTableHeader();
-        header.setOpaque(false); // Titre de la table transparent
-        header.setBackground(new Color(0, 0, 0, 0)); // Titre transparent
-        
-        // Modifier les couleurs des cellules
-        tableEmprunts.setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie
-        tableEmprunts.setForeground(Color.BLACK); // Couleur du texte en noir
+    private void ajouterEmprunt() {
+        User selectedUser  = (User ) cbUser .getSelectedItem();
+        Livre selectedLivre = (Livre) cbLivre.getSelectedItem();
+        LocalDate dateEmprunt = dateEmpruntChooser.getDate() != null
+                ? dateEmpruntChooser.getDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                : null;
+        LocalDate dateRetour = dateRetourChooser.getDate() != null
+                ? dateRetourChooser.getDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                : null;
 
-        // Appliquer une transparence au JScrollPane pour que la zone de la table soit également transparente
-        scrollTable.setOpaque(false);
-        scrollTable.getViewport().setOpaque(false);
+        // Validate inputs
+        if (selectedUser  == null || selectedLivre == null || dateEmprunt == null || dateRetour == null) {
+            JOptionPane.showMessageDialog(this, "Veuillez remplir tous les champs.");
+            return;
+        }
 
-        // Ajouter le tableau au panel
-        panelPrincipal.add(scrollTable);
+        // Validate the return date
+        if (dateRetour.isAfter(dateEmprunt.plusDays(14))) {
+            JOptionPane.showMessageDialog(this, "La date de retour ne peut pas dépasser 14 jours.");
+            return;
+        }
 
-        // Ajouter le panel principal (contenant tous les sous-panels) au JLabel avec l'image en fond
-        if (backgroundLabel != null) {
-            backgroundLabel.add(panelPrincipal, BorderLayout.CENTER);
+        // Check if the book is available
+        if (!selectedLivre.isDisponible()) {
+            JOptionPane.showMessageDialog(this, "Ce livre est déjà emprunté par un autre utilisateur.");
+            return;
+        }
+
+        // Call the controller to add the emprunt
+        empruntController.ajouterEmprunt(Integer.parseInt(selectedUser .getId()), selectedLivre.getId(), dateEmprunt, dateRetour);
+        JOptionPane.showMessageDialog(this, "Emprunt ajouté avec succès.");
+        loadEmprunts(); // Refresh the table to show the new emprunt
+    }
+
+    private void loadUsers() {
+        List<User> users = userController.lireTousLesUsers();
+        cbUser.removeAllItems(); // Clear existing items
+        for (User user : users) {
+            cbUser.addItem(user);
         }
     }
 
-    private void setTransparentTextField(JTextField textField) {
-        textField.setOpaque(false);
-        textField.setForeground(Color.BLACK);  // Pour que le texte soit noir
-        textField.setBackground(new Color(255, 255, 255, 150)); // Fond blanc semi-transparent
-        textField.setFont(new Font("Segoe Script", Font.PLAIN, 16)); // Police fantaisie
+    private void loadLivres() {
+        List<Livre> livres = empruntController.getLivres();
+        cbLivre.removeAllItems(); // Clear existing items
+        for (Livre livre : livres) {
+            cbLivre.addItem(livre);
+        }
     }
 
-    public static void main(String[] args) {
-        // S'assurer que l'application utilise le Look and Feel de la plateforme
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();  // En cas d'erreur, utiliser l'apparence par défaut
+    private void loadEmprunts() {
+        List<Emprunt> emprunts = empruntController.afficherHistoriqueEmprunts();
+        tableModel.setRowCount(0); // Clear existing rows
+        for (Emprunt emprunt : emprunts) {
+            tableModel.addRow(new Object[]{
+                    emprunt.getId(),
+                    emprunt.getUtilisateurId(),
+                    emprunt.getLivreId(),
+                    emprunt.getDateEmprunt(),
+                    emprunt.getDateRetour(),
+                    emprunt.isEstRendu() ? "Oui" : "Non"
+            });
         }
-
-        // Créer et afficher l'interface utilisateur
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Gestion des Emprunts");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(800, 600);
-            EmpruntView empruntView = new EmpruntView();
-            frame.add(empruntView);
-            frame.setVisible(true); // Afficher la fenêtre des emprunts
-        });
     }
 }

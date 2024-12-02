@@ -48,7 +48,7 @@ public class LivreView extends JPanel {
         headerPanel.add(searchBar, BorderLayout.CENTER);
 
         // Vérifier le rôle de l'utilisateur
-        if (user != null && Role.BIBLIOTHECAIRE.equals(user.getRole())) {
+        if (user != null && Role.ADMINISTRATEUR.equals(user.getRole())) {
             // Bouton d'ajout de livre
             addButton = new JButton("Ajouter Livre");
             addButton.setIcon(resizeIcon(loadIcon("/ressources/add-icon.png"), 20, 20));
