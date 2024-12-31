@@ -1,4 +1,4 @@
-# Created at 2024-12-31T17:56:35.652
+# Created at 2024-12-31T21:56:34.621
 TestSet has not finished before stream error has appeared >> initializing exit by non-null configuration: EXIT
 java.io.EOFException
 	at org.apache.maven.surefire.api.stream.AbstractStreamDecoder.read(AbstractStreamDecoder.java:444)

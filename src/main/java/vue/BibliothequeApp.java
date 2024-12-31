@@ -98,7 +98,7 @@ public class BibliothequeApp extends JFrame {
         }
 
         // Message de bienvenue sous l'avatar
-        welcomeLabel = new JLabel("Bienvenue, Nom Utilisateur !");
+        welcomeLabel = new JLabel("Bienvenue !");
         welcomeLabel.setFont(new Font("Arial", Font.BOLD, 16));
         welcomeLabel.setForeground(Color.BLACK); // Couleur de texte par défaut // Ajuster le texte sous l'avatar en réduisant l'espace
         welcomePanel.add(Box.createVerticalStrut(5));  // Espace entre l'avatar et le texte
@@ -142,7 +142,6 @@ public class BibliothequeApp extends JFrame {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    // Méthode pour charger les ressources
     private String loadResourcePath(String resourceName) {
         try {
             // Utilisation de getResource pour obtenir le chemin de la ressource
@@ -157,8 +156,7 @@ public class BibliothequeApp extends JFrame {
             
             return path;
         } catch (Exception e) {
-            // Afficher un message d'erreur si la ressource n'est pas trouvée
-            JOptionPane.showMessageDialog(this, "Erreur lors du chargement de la ressource : " + resourceName, "Erreur", JOptionPane.ERROR_MESSAGE);
+            // Ne pas afficher de message d'erreur, juste retourner null
             return null; // Retourne null si la ressource n'est pas trouvée
         }
     }
@@ -223,10 +221,5 @@ public class BibliothequeApp extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        // Assurez-vous de lancer l'UI sur le thread de l'Event Dispatching (EDT)
-        SwingUtilities.invokeLater(() -> {
-            new BibliothequeApp().setVisible(true);
-        });
-    }
+  
 }

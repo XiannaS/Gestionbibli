@@ -139,11 +139,13 @@ public class DashboardController {
                 return true;
         }
     }
+    
     public void searchUsers(String query) {
         List<User> filteredUsers = userDAO.rechercherParCritere(query);
         // Mettez à jour la vue avec les utilisateurs filtrés
         dashboardView.updateUserList(filteredUsers); // Assurez-vous d'avoir une méthode pour mettre à jour la liste des utilisateurs
     }
+    
     private void updateActiveUsersChart() {
         List<User> utilisateursActifs = userController.getActiveUsers(); // Méthode à définir dans UserController
         List<String> userNames = utilisateursActifs.stream()
