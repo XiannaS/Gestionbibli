@@ -53,12 +53,12 @@ public class BibliothequeApp extends JFrame {
         String usersFilePath = loadResourcePath("data/users.csv");
 
         // Initialisation des contrôleurs
+     // Initialisation des contrôleurs
         UserDAO userDAO = new UserDAO(usersFilePath);
         EmpruntController empruntController = new EmpruntController(empruntView, empruntFilePath, booksFilePath, usersFilePath);
         LivreController livreController = new LivreController(livreView, booksFilePath, empruntController);
         UserController userController = new UserController(userView, userDAO);
-        DashboardController dashboardController = new DashboardController(dashboardView, empruntController, livreController, userController);
-
+        DashboardController dashboardController = new DashboardController(dashboardView, empruntController, livreController, userController, userDAO); // Ajout de userDAO ici
         // Création du panneau d'onglets
         tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Livres", livreView);

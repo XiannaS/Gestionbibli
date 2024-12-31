@@ -11,6 +11,8 @@ import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import model.User;
+
 public class DashboardView extends JPanel {
     private static final long serialVersionUID = 1L;
 
@@ -25,10 +27,11 @@ public class DashboardView extends JPanel {
 
     // Menu déroulant pour les filtres
     private JComboBox<String> filterComboBox;
-    private JComboBox<String> genreComboBox; // Déclaration de genreComboBox
-    private JComboBox<String> periodComboBox; // Déclaration de periodComboBox
-    private JComboBox<String> userComboBox; // Déclaration de userComboBox
-
+    private JComboBox<String> genreComboBox;
+    private JComboBox<String> periodComboBox;
+    private JComboBox<String> userComboBox;
+    // Liste pour afficher les utilisateurs
+    private JList<User> userList;
     public DashboardView() {
         setLayout(new BorderLayout(15, 15)); // Espacement entre les composants
         setBackground(new Color(0xEAEAEA)); // Couleur de fond du Dashboard
@@ -73,6 +76,11 @@ public class DashboardView extends JPanel {
         controlPanel.add(refreshButton);
 
         add(controlPanel, BorderLayout.SOUTH);
+
+        // Initialisation de la JList pour afficher les utilisateurs
+        userList = new JList<>();
+        add(new JScrollPane(userList), BorderLayout.EAST); // Ajout de la JList à la vue
+    
     }
 
     // Méthode pour créer une carte avec un panneau intérieur et un titre
@@ -82,6 +90,7 @@ public class DashboardView extends JPanel {
         card.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(0xCCCCCC), 1, true), title));
         card.add(innerPanel, BorderLayout.CENTER);
         return card;
+        
     }
 
     // Mise à jour des statistiques affichées
@@ -164,5 +173,9 @@ public JComponent createPieChart(String title, List<String> categories, List<Dou
 
     public JComboBox<String> getUserComboBox() {
         return userComboBox; // Assurez-vous que userComboBox est bien initialisé
+    }
+
+    public void updateUserList(List<User> users) {
+        userList.setListData(users.toArray(new User[0])); // Update the JList with the new user data
     }
 }

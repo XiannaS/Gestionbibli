@@ -12,19 +12,25 @@ import vue.DashboardView;
 import model.Emprunt;
 import model.Livre;
 import model.User;
+import vue.DashboardView;
+import model.Emprunt;
+import model.Livre;
+import model.User;
+import model.UserDAO; // Assurez-vous d'importer UserDAO
 
 public class DashboardController {
     private DashboardView dashboardView;
     private EmpruntController empruntController;
     private LivreController livreController;
     private UserController userController;
+    private UserDAO userDAO; // Ajout de UserDAO
 
-    public DashboardController(DashboardView dashboardView, EmpruntController empruntController, LivreController livreController, UserController userController) {
+    public DashboardController(DashboardView dashboardView, EmpruntController empruntController, LivreController livreController, UserController userController, UserDAO userDAO) {
         this.dashboardView = dashboardView;
         this.empruntController = empruntController;
         this.livreController = livreController;
         this.userController = userController;
-
+        this.userDAO = userDAO; // Initialisation de UserDAO
         // Ajouter des écouteurs pour les boutons de rafraîchissement et les filtres
         dashboardView.getRefreshButton().addActionListener(e -> refreshDashboard());
         dashboardView.getFilterComboBox().addActionListener(e -> filterDashboardData());
