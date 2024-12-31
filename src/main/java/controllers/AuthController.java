@@ -1,6 +1,8 @@
 package controllers;
 
 import javax.swing.JOptionPane;
+import javax.swing.UnsupportedLookAndFeelException;
+
 import model.User;
 import model.UserDAO;
 import vue.BibliothequeApp;
@@ -15,10 +17,17 @@ public class AuthController {
         this.userDAO = userDAO;
 
         // Action pour le bouton de connexion
-        this.connexionView.getLoginButton().addActionListener(e -> seConnecter());
+        this.connexionView.getLoginButton().addActionListener(e -> {
+			try {
+				seConnecter();
+			} catch (UnsupportedLookAndFeelException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
     }
 
-    private void seConnecter() {
+    private void seConnecter() throws UnsupportedLookAndFeelException {
         String email = connexionView.getUsername(); // Utiliser getUsername() pour obtenir l'email
         String motDePasse = connexionView.getPassword();
 

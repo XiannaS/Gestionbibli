@@ -19,16 +19,15 @@ public class EmpruntView extends JPanel {
     private JButton retournerButton;
     private JButton supprimerButton;
     private JButton renouvelerButton;
-    private JButton toutSupprimerButton;
+    
     private JComboBox<String> triComboBox;
     private JPanel actionPanel;
     private JTextField searchField;
     private JButton searchButton;
     private JComboBox<String> searchTypeComboBox;
-    public JButton getToutSupprimerButton() {
+    
        
-		return toutSupprimerButton; // Assurez-vous d'avoir une variable pour ce bouton
-    }
+	 
     public EmpruntView() {
         setLayout(new BorderLayout());
 
@@ -108,17 +107,16 @@ public class EmpruntView extends JPanel {
         retournerButton = new JButton("Retourner Livre");
         supprimerButton = new JButton("Supprimer Emprunt");
         renouvelerButton = new JButton("Prolonger Emprunt");
-        toutSupprimerButton = new JButton("tout Supprimer Emprunt");
+       
         styleButton(retournerButton);
         styleButton(supprimerButton);
         styleButton(renouvelerButton);
         
-        styleButton(toutSupprimerButton);
-        
+      
         buttonPanel.add(retournerButton);
         buttonPanel.add(supprimerButton);
         buttonPanel.add(renouvelerButton);
-        buttonPanel.add(toutSupprimerButton);
+        
         // Panneau de tri
         JPanel triPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         triPanel.setBorder(new TitledBorder(new LineBorder(Color.GRAY, 1, true), "Options de Tri"));

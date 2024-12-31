@@ -89,24 +89,9 @@ public class EmpruntController {
             String selectedCriteria = (String) empruntView.getTriComboBox().getSelectedItem();
             chargerEmprunts(selectedCriteria);
         });
-        // Écouteur pour le bouton "Tout Supprimer"
-        empruntView.getToutSupprimerButton().addActionListener(e -> {
-            int confirmation = JOptionPane.showConfirmDialog(empruntView, "Êtes-vous sûr de vouloir supprimer tous les emprunts ?", "Confirmation", JOptionPane.YES_NO_OPTION);
-            if (confirmation == JOptionPane.YES_OPTION) {
-                try {
-					supprimerTousLesEmprunts();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-            }
-        });
+ 
     }
-    public void supprimerTousLesEmprunts() throws IOException {
-        empruntModel.supprimerTousLesEmprunts(); // Méthode à implémenter dans EmpruntDAO
-        chargerEmprunts("Tous"); // Recharge la liste des emprunts
-        JOptionPane.showMessageDialog(empruntView, "Tous les emprunts ont été supprimés avec succès !");
-    }
+  
     // Méthode pour obtenir le titre du livre par ID
     public String getTitreLivreById(int livreId) {
         Livre livre = livreDAO.rechercherParID(livreId);
@@ -218,7 +203,6 @@ public class EmpruntController {
         System.out.println("Renouvellement réussi.");
         return true; // Renouvellement réussi
     }
-
 
 
     public void supprimerEmprunt(int empruntId) {
