@@ -1,10 +1,8 @@
 package model;
-
 public enum Role {
     MEMBRE("Membre"),
     BIBLIOTHECAIRE("Bibliothécaire"),
-    ADMINISTRATEUR("Administrateur");
-	
+    ADMINISTRATEUR("Administrateur"); // Assurez-vous que cette constante existe
 
     private final String label;
 
@@ -16,13 +14,15 @@ public enum Role {
         return label;
     }
 
-    // Vérification si un rôle est valide
-    public static boolean isValidRole(String role) {
-        for (Role r : Role.values()) {
-            if (r.getLabel().equalsIgnoreCase(role)) {
-                return true;
+    public static Role fromLabel(String label) {
+        System.out.println("Recherche du rôle pour l'étiquette : " + label); // Ajoutez cette ligne
+        for (Role role : Role.values()) {
+            if (role.getLabel().equalsIgnoreCase(label.trim())) {
+            	System.out.println("  rôle trouve l'étiquette : " + label); 
+                return role;
             }
         }
-        return false;
+        throw new IllegalArgumentException("Aucun rôle trouvé pour l'étiquette : " + label);
     }
+    
 }

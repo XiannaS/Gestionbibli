@@ -1,128 +1,317 @@
 package controllers;
 
-import java.util.UUID;
 import model.Livre;
+import model.LivreDAO;
+import model.Emprunt;
+import model.EmpruntDAO;
+import vue.LivreView;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Collections;
+import javax.swing.*;
+
+import exception.LivreException;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class LivreController {
-	private static final String CSV_FILE = "src/main/resources/ressources/books.csv";    // Méthode pour lire les livres depuis le fichier CSV
+    private LivreView livreView;
+    private LivreDAO livreDAO;
+   
+    private EmpruntController empruntController; // Référence à EmpruntController
 
-	public List<Livre> lireLivres() {
-	    try (Stream<String> lines = Files.lines(Paths.get(CSV_FILE))) {
-	        return lines
-	            .map(line -> line.split(","))
-	            .filter(attributes -> attributes.length >= 7) // Vérifie que la ligne a au moins 7 éléments
-	            .map(attributes -> {
-	                try {
-	                    return new Livre(
-	                        attributes[0],
-	                        attributes[1],
-	                        attributes[2],
-	                        attributes[3],
-	                        Integer.parseInt(attributes[4]),
-	                        "Yes".equalsIgnoreCase(attributes[5]), // Vérifiez si la valeur est "Yes"
-	                        attributes[6]
-	                    );
-	                } catch (NumberFormatException e) {
-	                    System.err.println("Erreur de format pour la ligne : " + String.join(",", attributes));
-	                    return null; // Retourner null pour filtrer plus tard
+    public LivreController(LivreView livreView, String livreFilePath, EmpruntController empruntController) {
+        this.livreView = livreView;
+        this.livreDAO = new LivreDAO(livreFilePath);
+        
+        this.empruntController = empruntController; // Initialisation du contrôleur d'emprunt
+
+        // Charger et afficher les livres au démarrage
+        loadAndDisplayBooks();
+
+        // Ajouter des écouteurs d'événements
+        livreView.getSearchButton().addActionListener(e -> rechercherLivres());
+        livreView.getAjouterButton().addActionListener(e -> ajouterLivre());
+        livreView.getModifierButton().addActionListener(e -> modifierLivre());
+        livreView.getSupprimerButton().addActionListener(e -> supprimerLivre());
+        livreView.getEmprunterButton().addActionListener(e -> emprunterLivre());
+        livreView.getLivresTable().getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) { // Vérifiez si la sélection est terminée
+                afficherDetailsLivre();
+            }
+        });
+    }
+
+    public void rechercherLivres() {
+        String searchTerm = livreView.getSearchField().getText().trim();
+        String searchType = (String) livreView.getSearchComboBox().getSelectedItem();
+
+        List<Livre> livres = livreDAO.getAllLivres().stream()
+            .filter(livre -> {
+                switch (searchType) {
+                    case "Titre":
+                        return livre.getTitre().toLowerCase().contains(searchTerm.toLowerCase());
+                    case "Auteur":
+                        return livre.getAuteur().toLowerCase().contains(searchTerm.toLowerCase());
+                    case "Genre":
+                        return livre.getGenre().toLowerCase().contains(searchTerm.toLowerCase());
+                    case "ISBN":
+                        return livre.getIsbn().toLowerCase().contains(searchTerm.toLowerCase());
+                    default:
+                        return false;
+                }
+            })
+            .collect(Collectors.toList());
+
+        livreView.updateLivresTable(livres);
+    }
+
+	public void loadAndDisplayBooks() {
+        // Charger les livres et les afficher dans la vue
+        livreView.updateLivresTable(livreDAO.getAllLivres());
+    }
+
+    public void ajouterLivre() {
+        try {
+            // Vérifier si tous les champs obligatoires sont remplis
+            if (livreView.getTitre().isEmpty() || livreView.getAuteur().isEmpty() || livreView.getIsbn().isEmpty()) {
+                throw new LivreException("Tous les champs obligatoires doivent être remplis.");
+            }
+
+            // Vérifier si l'année de publication est valide
+            int anneePublication = livreView.getAnneePublication();
+            if (anneePublication < 0 || anneePublication > LocalDate.now().getYear()) {
+                throw new LivreException("L'année de publication doit être valide.");
+            }
+
+            // Vérifier si le nombre d'exemplaires est positif
+            int exemplaires = livreView.getExemplaires();
+            if (exemplaires <= 0) {
+                throw new LivreException("Le nombre d'exemplaires doit être positif.");
+            }
+
+            // Vérifier si le livre existe déjà par ISBN
+            String isbn = livreView.getIsbn();
+            boolean livreExistant = livreDAO.getAllLivres().stream()
+                .anyMatch(livre -> livre.getIsbn().equals(isbn));
+            
+            if (livreExistant) {
+                throw new LivreException("Un livre avec cet ISBN existe déjà.");
+            }
+
+            // Créer un nouvel objet Livre
+            Livre livre = new Livre(
+                generateId(), // ID généré
+                livreView.getTitre(),
+                livreView.getAuteur(),
+                livreView.getSelectedGenre(),
+                anneePublication,
+                "", // imageUrl, si non utilisé
+                isbn,
+                livreView.getDescription(),
+                livreView.getEditeur(),
+                exemplaires
+            );
+
+            // Ajouter le livre au DAO
+            livreDAO.addLivre(livre);
+            loadAndDisplayBooks(); // Recharger la liste des livres
+            JOptionPane.showMessageDialog(livreView, "Livre ajouté avec succès !");
+            
+            // Vider le formulaire
+            livreView.clearFields(); // Assurez-vous que cette méthode existe dans LivreView
+        } catch (LivreException e) {
+            JOptionPane.showMessageDialog(livreView, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(livreView, "Erreur : Veuillez entrer un nombre valide pour l'année de publication et le nombre d'exemplaires.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(livreView, "Erreur lors de l'ajout du livre : " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void modifierLivre() {
+        int selectedIndex = livreView.getLivresTable().getSelectedRow();
+
+        if (selectedIndex != -1) {
+            // Récupérer le livre sélectionné
+            Livre livre = livreDAO.getAllLivres().get(selectedIndex);
+
+            try {
+                // Récupérer les nouvelles valeurs
+                String nouveauTitre = livreView.getTitre();
+                String nouvelAuteur = livreView.getAuteur();
+                String nouveauGenre = livreView.getSelectedGenre();
+                int anneePublication = livreView.getAnneePublication();
+                String nouvelIsbn = livreView.getIsbn();
+                String nouvelleDescription = livreView.getDescription();
+                String nouvelEditeur = livreView.getEditeur();
+                int nouveauxExemplaires = livreView.getExemplaires(); // Le nouveau nombre d'exemplaires
+
+                // Vérifier si l'année de publication est valide
+                if (anneePublication < 0) {
+                    throw new LivreException.InvalidYearException("L'année de publication ne peut pas être négative.");
+                }
+
+                // Vérifier si le livre existe déjà (en ignorant le livre actuel)
+                boolean livreExistant = livreDAO.getAllLivres().stream()
+                    .anyMatch(l -> l.getTitre().equalsIgnoreCase(nouveauTitre) && l.getAuteur().equalsIgnoreCase(nouvelAuteur) && l.getId() != livre.getId());
+
+                if (livreExistant) {
+                    throw new LivreException("Un livre avec ce titre et cet auteur existe déjà.");
+                }
+
+                // Mettre à jour les détails du livre
+                livre.setTitre(nouveauTitre);
+                livre.setAuteur(nouvelAuteur);
+                livre.setGenre(nouveauGenre);
+                livre.setAnneePublication(anneePublication);
+                livre.setIsbn(nouvelIsbn);
+                livre.setDescription(nouvelleDescription);
+                livre.setEditeur(nouvelEditeur);
+
+                // Mettre à jour le nombre d'exemplaires disponibles
+                livre.setTotalExemplaires(nouveauxExemplaires); // Mettez à jour les exemplaires
+
+                // Mettre à jour le livre dans le DAO
+                livreDAO.updateLivre(livre);
+
+                // Vider le formulaire
+                livreView.clearFields();
+                loadAndDisplayBooks(); // Recharger la liste des livres
+                JOptionPane.showMessageDialog(livreView, "Livre modifié avec succès !");
+            } catch (LivreException.InvalidYearException e) {
+                JOptionPane.showMessageDialog(livreView, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            } catch (LivreException e) {
+                JOptionPane.showMessageDialog(livreView, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(livreView, "Erreur : Veuillez entrer un nombre valide pour l'année de publication et le nombre d'exemplaires.", "Erreur", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(livreView, "Erreur lors de la modification du livre : " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(livreView, "Veuillez sélectionner un livre à modifier.", "Avertissement", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+
+	
+	public void supprimerLivre() {
+		    int selectedIndex = livreView.getLivresTable().getSelectedRow();
+		    
+		    if (selectedIndex != -1) {
+		        // Récupérer le livre sélectionné
+		        Livre livre = livreDAO.getAllLivres().get(selectedIndex);
+		        
+		        // Vérifier s'il y a des emprunts actifs
+		        // Assurez-vous que l'ID utilisateur est de type String
+		        String userId = String.valueOf(livre.getId()); // Remplacez par l'ID de l'utilisateur approprié
+		
+		        if (empruntController.hasActiveEmpruntsForBook(livre.getId())) {
+		            JOptionPane.showMessageDialog(livreView, "Impossible de supprimer ce livre, car il y a des emprunts actifs associés.", "Erreur", JOptionPane.ERROR_MESSAGE);
+		            return;
+		        }
+
+		
+		        int confirmation = JOptionPane.showConfirmDialog(livreView, "Êtes-vous sûr de vouloir supprimer le livre : " + livre.getTitre() + " ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+		        
+		        if (confirmation == JOptionPane.YES_OPTION) {
+		            // Supprimer le livre du DAO
+		            livreDAO.deleteLivre(livre.getId()); // Assurez-vous que cette méthode existe dans LivreDAO
+		            loadAndDisplayBooks(); // Recharger la liste des livres
+		            JOptionPane.showMessageDialog(livreView, "Livre supprimé avec succès !");
+		        }
+		    } else {
+		        JOptionPane.showMessageDialog(livreView, "Veuillez sélectionner un livre à supprimer.", "Avertissement", JOptionPane.WARNING_MESSAGE);
+		    }
+		}
+
+	public void emprunterLivre() {
+	    int selectedIndex = livreView.getLivresTable().getSelectedRow();
+
+	    if (selectedIndex != -1) {
+	        String userIdStr = JOptionPane.showInputDialog(livreView, "Veuillez entrer votre ID utilisateur :");
+
+	        if (userIdStr != null && !userIdStr.trim().isEmpty()) {
+	            try {
+	                // Vérifier si l'utilisateur est actif
+	                if (!empruntController.isUserActive(userIdStr)) {
+	                    JOptionPane.showMessageDialog(livreView, "L'utilisateur n'est pas actif ou a des pénalités.", "Erreur", JOptionPane.ERROR_MESSAGE);
+	                    return;
 	                }
-	            })
-	            .filter(livre -> livre != null) // Filtrer les livres null
-	            .collect(Collectors.toList());
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	        return Collections.emptyList();
+
+	                // Récupérer le livre sélectionné
+	                Livre livre = livreDAO.getAllLivres().get(selectedIndex);
+
+	                // Vérifier si l'utilisateur a déjà emprunté ce livre
+	                System.out.println("Vérification des emprunts actifs de l'utilisateur...");
+	                if (empruntController.hasActiveEmpruntForUser (userIdStr, livre.getId())) {
+	                    JOptionPane.showMessageDialog(livreView, "Vous avez déjà emprunté ce livre.", "Erreur", JOptionPane.ERROR_MESSAGE);
+	                    return;
+	                }
+
+	                // Vérification du nombre d'exemplaires disponibles via la méthode DAO
+	              //  System.out.println("Vérification des exemplaires disponibles...");
+	            //   int exemplairesDisponibles = livreDAO.getExemplairesDisponibles(livre);
+	                
+	               // if (exemplairesDisponibles <= 0) {
+	                 //   JOptionPane.showMessageDialog(livreView, "Ce livre n'est pas disponible pour emprunt.", "Avertissement", JOptionPane.WARNING_MESSAGE);
+	                  //  return;
+	               // }
+	                
+	                System.out.println("Le livre est disponible, mise à jour...");
+	                // Si le livre est disponible
+	                livre.emprunter();
+	                // Mettre à jour le nombre d'exemplaires disponibles du livre
+	                livreDAO.updateLivre(livre); // Mettre à jour le livre dans le DAO
+	              
+	                // Créer un nouvel emprunt
+	                Emprunt emprunt = new Emprunt(empruntController.generateEmpruntId(), livre.getId(), userIdStr, LocalDate.now(),
+	                        LocalDate.now().plusDays(7), null, false, 0);
+	                
+	                empruntController.ajouterEmprunt(emprunt);
+
+	                loadAndDisplayBooks();
+	                JOptionPane.showMessageDialog(livreView, "Livre emprunté avec succès !");
+	            } catch (Exception e) {
+	                JOptionPane.showMessageDialog(livreView, "Erreur lors de l'emprunt du livre : " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+	            }
+	        }
+	    } else {
+	        JOptionPane.showMessageDialog(livreView, "Veuillez sélectionner un livre à emprunter.", "Avertissement", JOptionPane.WARNING_MESSAGE);
 	    }
 	}
 
- // Dans la méthode ajouterLivre
- public void ajouterLivre(Livre livre) {
-     // Générer un ID unique avec UUID
-     String id = UUID.randomUUID().toString();
-     livre.setId(id);
-     System.out.println("Ajout du livre avec ID : " + id);
+	
+	
+	public void afficherDetailsLivre() {
+	    int selectedIndex = livreView.getLivresTable().getSelectedRow(); // Utilisez getSelectedRow()
+	    if (selectedIndex != -1) {
+	        Livre livre = livreDAO.getAllLivres().get(selectedIndex);
+	        livreView.setDetails(livre);  // Assurez-vous que cette méthode affiche les informations pertinentes
+	    }
+	}
 
-     try (BufferedWriter bw = new BufferedWriter(new FileWriter(CSV_FILE, true))) {
-         bw.write(livre.toCsvFormat());
-         bw.newLine();
-     } catch (IOException e) {
-         e.printStackTrace();
-     }
- }
+	// Méthode pour récupérer un livre par son ID dans LivreController
+	public Livre getLivreById(int id) {
+	    // Assurez-vous de parcourir correctement la liste des livres et de retourner null si aucun livre n'est trouvé
+	    for (Livre livre : livreDAO.getAllLivres()) {
+	        if (livre.getId() == id) {
+	            return livre;
+	        }
+	    }
+	    return null;  // Aucun livre trouvé avec cet ID
+	}
+
+
     
-
-    // Méthode pour modifier un livre dans le fichier CSV
-    public void modifierLivre(Livre livreModifie) {
-        List<Livre> livres = lireLivres();
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(CSV_FILE))) {
-            livres.stream()
-                .map(livre -> livre.getId().equals(livreModifie.getId()) ? livreModifie : livre)
-                .forEach(livre -> {
-                    try {
-                        bw.write(livre.toCsvFormat());
-                        bw.newLine();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private int generateId() {
+        // Logique pour générer un nouvel ID unique pour un livre
+        return livreDAO.getAllLivres().size() + 1; // Exemple simple
     }
 
-    // Méthode pour supprimer un livre du fichier CSV
-    public void supprimerLivre(String id) {
-        List<Livre> livres = lireLivres();
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(CSV_FILE))) {
-            livres.stream()
-                .filter(livre -> !livre.getId().equals(id))
-                .forEach(livre -> {
-                    try {
-                        bw.write(livre.toCsvFormat());
-                        bw.newLine();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public List<Livre> getAllLivres() {
+        return livreDAO.getAllLivres(); // Si cette méthode existe dans le DAO
     }
-    
-    public List<Livre> filtrerLivres(String searchQuery, boolean onlyAvailable, boolean onlyBorrowed, String selectedGenre) {
-        List<Livre> allBooks = lireLivres();
-        System.out.println("Total livres chargés: " + allBooks.size());
 
-        return allBooks.stream()
-            .filter(livre -> {
-                // Vérifier si le livre correspond à la recherche par titre ou auteur
-                boolean matchesSearch = livre.getTitre().toLowerCase().contains(searchQuery) || 
-                                        livre.getAuteur().toLowerCase().contains(searchQuery);
-                System.out.println("Livre: " + livre.getTitre() + ", Correspond à la recherche: " + matchesSearch);
-
-                // Vérifier la disponibilité ou l'emprunt
-                boolean matchesAvailability = true; // Par défaut, on considère que ça correspond
-                if (onlyAvailable && !onlyBorrowed) {
-                    matchesAvailability = livre.isDisponible(); // Seulement les livres disponibles
-                } else if (!onlyAvailable && onlyBorrowed) {
-                    matchesAvailability = !livre.isDisponible(); // Seulement les livres empruntés
-                }
-
-                // Vérifier le genre
-                boolean matchesGenre = selectedGenre.equals("Tous") || livre.getGenre().equals(selectedGenre);
-                System.out.println("Livre: " + livre.getTitre() + ", Genre correspond: " + matchesGenre);
-
-                return matchesSearch && matchesAvailability && matchesGenre; // Retourner true si toutes les conditions sont remplies
-            })
-            .peek(livre -> System.out.println("Livre filtré: " + livre.getTitre())) // Pour voir les livres filtrés
-            .collect(Collectors.toList());
-    }
+ 
 }

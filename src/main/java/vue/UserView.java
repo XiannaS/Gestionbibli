@@ -1,315 +1,299 @@
 package vue;
 
-import controllers.UserController;
 import model.Role;
 import model.User;
-import style.IconCellRenderer;
-import style.SearchBar;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.List;
-import java.util.UUID;
 
 public class UserView extends JPanel {
-
     private static final long serialVersionUID = 1L;
-    private JTextField prenomField;
-    private JTextField emailField;
-    private JTextField numeroTelField;
+    private JTextField nomField, prenomField, emailField, numeroTelField;
     private JComboBox<Role> roleComboBox;
     private JCheckBox statutCheckBox;
-    private JTable usersTable;
+    private JTable userTable;
     private DefaultTableModel tableModel;
-    private SearchBar searchBar;
-    private User currentUser ;
-    private UserController userController;
-    public UserView(Role currentUserRole, User currentUser ) {
-        this.userController = new UserController();
-        this.currentUser  = currentUser ;
-        initComponents();
-        loadUsers();
-        searchBar = new SearchBar(currentUserRole);
+    private JTextField searchField;
+    private JComboBox<Role> searchRoleComboBox;
+    private JButton ajouterButton, modifierButton, supprimerButton, searchButton;
 
+    public UserView() {
+        initUI();
+    }
+
+    private void initUI() {
         setLayout(new BorderLayout());
-        add(searchBar, BorderLayout.NORTH);
-        add(createTablePanel(), BorderLayout.CENTER);
-        add(createIconPanel(), BorderLayout.SOUTH);
-    }
 
-    private void initComponents() {
-        new JTextField(15);
-        prenomField = new JTextField(15);
-        emailField = new JTextField(15);
-        numeroTelField = new JTextField(15);
-        roleComboBox = new JComboBox<>(Role.values());
+        // Formulaire de recherche
+        JPanel searchPanel = new JPanel(new FlowLayout());
+        searchPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        searchPanel.setBackground(null);
+
+        searchField = new JTextField(15);
+        searchField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        searchField.setMargin(new Insets(2, 10, 2, 2));
+
+        searchRoleComboBox = new JComboBox<>(new Role[]{
+            null, // Option pour tous les rôles
+            Role.fromLabel("MEMBRE"),
+            Role.fromLabel("Bibliothécaire")
+        });
+
+     // Dans la méthode initUI de UserView
+        searchButton = new JButton("Rechercher"); // Remarquez ici qu'on utilise le champ d'instance
+        searchButton.setFocusPainted(false);
+        searchButton.setBackground(new Color(100, 149, 237));
+        searchButton.setForeground(Color.WHITE);
+ 
+
+        searchPanel.add(new JLabel("Nom ou ID :"));
+        searchPanel.add(searchField);
+        searchPanel.add(new JLabel("Rôle :"));
+        searchPanel.add(searchRoleComboBox);
+        searchPanel.add(searchButton);
+
+        add(searchPanel, BorderLayout.NORTH);
+
+        // Carte pour le formulaire d'ajout / modification d'utilisateur
+        JPanel formCard = new JPanel(new GridBagLayout());
+        formCard.setBorder(new TitledBorder(new LineBorder(Color.GRAY, 1, true), "Formulaire Utilisateur"));
+        formCard.setBackground(null); // Fond subtil
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formCard.add(new JLabel("Nom :"), gbc);
+
+        gbc.gridx = 1;
+        nomField = new JTextField();
+        formCard.add(nomField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        formCard.add(new JLabel("Prénom :"), gbc);
+
+        gbc.gridx = 1;
+        prenomField = new JTextField();
+        formCard.add(prenomField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        formCard.add(new JLabel("Email :"), gbc);
+
+        gbc.gridx = 1;
+        emailField = new JTextField();
+        formCard.add(emailField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        formCard.add(new JLabel("Numéro de téléphone :"), gbc);
+
+        gbc.gridx = 1;
+        numeroTelField = new JTextField();
+        formCard.add(numeroTelField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        formCard.add(new JLabel("Rôle :"), gbc);
+
+        gbc.gridx = 1;
+        roleComboBox = new JComboBox<>(new Role[]{
+            Role.MEMBRE,
+            Role.BIBLIOTHECAIRE
+        });
+        formCard.add(roleComboBox, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        formCard.add(new JLabel("Statut :"), gbc);
+
+        gbc.gridx = 1;
         statutCheckBox = new JCheckBox("Actif");
+        formCard.add(statutCheckBox, gbc);
 
-        tableModel = new DefaultTableModel(new Object[]{"Nom", "Prénom", "Email", "Téléphone", "Rôle", "Statut", "Modifier", "Supprimer"}, 0);
-        usersTable = new JTable(tableModel);
-        usersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        usersTable.getColumnModel().getColumn(5).setCellRenderer(new StatusRenderer());
+        ajouterButton = new JButton("Ajouter Utilisateur");
+        modifierButton = new JButton("Modifier Utilisateur");
+        supprimerButton = new JButton("Supprimer Utilisateur");
 
-        usersTable.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                usersTable.rowAtPoint(e.getPoint());
-                int column = usersTable.columnAtPoint(e.getPoint());
+        // Personnalisation des boutons
+        ajouterButton.setFocusPainted(false);
+        modifierButton.setFocusPainted(false);
+        supprimerButton.setFocusPainted(false);
 
-                if (column == 6) { // Colonne Modifier
-                    modifierUtilisateur();
-                } else if (column == 7) { // Colonne Supprimer
-                    supprimerUtilisateur();
-                }
+        ajouterButton.setBackground(new Color(60, 179, 113)); // Couleur personnalisée
+        modifierButton.setBackground(new Color(255, 165, 0)); // Couleur personnalisée
+        supprimerButton.setBackground(new Color(255, 69, 58)); // Couleur personnalisée
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0)); // Centré avec espacement vertical réduit
+        buttonPanel.setBackground(null); // Pas de fond
+        buttonPanel.add(ajouterButton);
+        buttonPanel.add(modifierButton);
+        buttonPanel.add(supprimerButton);
+
+        JPanel formContainer = new JPanel(new BorderLayout());
+        formContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        formContainer.setBackground(null); // Pas de fond
+        formContainer.add(formCard, BorderLayout.CENTER);
+        formContainer.add(buttonPanel, BorderLayout.NORTH); // Les boutons en haut
+
+        // Carte pour afficher les utilisateurs
+        JPanel tableCard = new JPanel(new BorderLayout());
+        tableCard.setBorder(new TitledBorder(new LineBorder(Color.GRAY, 1, true), "Liste des Utilisateurs"));
+        tableCard.setBackground(null); // Fond subtil
+
+        String[] columnNames = {"ID", "Nom", "Prénom", "Email", "Numéro de téléphone", "Rôle", "Statut"};
+        tableModel = new DefaultTableModel(columnNames, 0);
+        userTable = new JTable(tableModel) {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Rendre les cellules non éditables
             }
-        });
+        };
+        userTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        userTable.setFillsViewportHeight(true);
+
+        JScrollPane tableScrollPane = new JScrollPane(userTable);
+
+        tableCard.add(tableScrollPane, BorderLayout.CENTER);
+
+        JPanel centerPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Marge autour des cartes
+        centerPanel.setBackground(null); // Pas de fond
+
+        centerPanel.add(formContainer);
+        centerPanel.add(tableCard);
+
+        add(centerPanel, BorderLayout.CENTER);
     }
 
-    private JPanel createTablePanel() {
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.add(new JScrollPane(usersTable), BorderLayout.CENTER);
-        return tablePanel;
+    public JTextField getNomField() { return nomField; }
+    public JTextField getPrenomField() { return prenomField; }
+    public JTextField getEmailField() { return emailField; }
+    public JTextField getNumeroTelField() { return numeroTelField; }
+   
+    public JCheckBox getStatutCheckBox() { return statutCheckBox; }
+
+    public Role getSelectedRole() {
+        return (Role) roleComboBox.getSelectedItem();
     }
 
-    private JPanel createIconPanel() {
-        JPanel iconPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        iconPanel.setBackground(new Color(0, 0, 0, 0));
-
-        JLabel addIcon = createIconLabel("/ressources/add-icon.png", "Ajouter un utilisateur", e -> ajouterUtilisateur());
-        iconPanel.add(addIcon);
-        return iconPanel;
+    public boolean isStatutChecked() {
+        return statutCheckBox.isSelected();
     }
 
-    private JLabel createIconLabel(String iconPath, String tooltip, ActionListener action) {
-        ImageIcon icon = new ImageIcon(getClass().getResource(iconPath));
-        Image scaledImage = icon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
-        JLabel label = new JLabel(new ImageIcon(scaledImage));
-        label.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        label.setToolTipText(tooltip);
-        label.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                action.actionPerformed(new ActionEvent(label, ActionEvent.ACTION_PERFORMED, null));
-            }
-        });
-        return label;
+    public JTable getUserTable() {
+        return userTable;
     }
 
-    private void ajouterUtilisateur() {
-        UserAddDialog addDialog = new UserAddDialog(this);
-        addDialog.setVisible(true);
+    public JTextField getSearchField() {
+        return searchField;
     }
 
-    private void modifierUtilisateur() {
-        int selectedRow = usersTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Sélectionnez un utilisateur à modifier.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
+    public JComboBox<Role> getSearchRoleComboBox() {
+        return searchRoleComboBox;
+    }
+
+    public JButton getAjouterButton() {
+        return ajouterButton;
+    }
+
+    public JButton getModifierButton() {
+        return modifierButton;
+    }
+
+    public JButton getSupprimerButton() {
+        return supprimerButton;
+    }
+
+    // Méthodes pour mettre à jour les champs
+    public void setNomField(String nom) {
+        nomField.setText(nom);
+    }
+
+    public void setPrenomField(String prenom) {
+        prenomField.setText(prenom);
+    }
+
+    public void setEmailField(String email) {
+        emailField.setText(email);
+    }
+
+    public void setNumeroTelField(String numeroTel) {
+        numeroTelField.setText(numeroTel);
+    }
+
+    public void setRoleComboBox(Role role) {
+        roleComboBox.setSelectedItem(role);
+    }
+
+    // Méthode pour vider les champs
+    public void clearFields() {
+        nomField.setText("");
+        prenomField.setText("");
+        emailField.setText("");
+        numeroTelField.setText("");
+        roleComboBox.setSelectedIndex(0);
+        statutCheckBox.setSelected(false);
+    }
+
+    public void displayUsers(List<User> users) {
+        tableModel.setRowCount(0); // Réinitialiser le modèle de table
+        for (User user : users) {
+            Object[] rowData = {
+                user.getId(),
+                user.getNom(),
+                user.getPrenom(),
+                user.getEmail(),
+                user.getNumeroTel(),
+                user.getRole().getLabel(),
+                user.isStatut()
+            };
+            tableModel.addRow(rowData); // Ajouter les données à la table
         }
-
-        String email = (String) tableModel.getValueAt(selectedRow, 2);
-        User userToEdit = userController.getUserByEmail(email);
-
-        if (userToEdit == null) {
-            JOptionPane.showMessageDialog(this, "Utilisateur non trouvé.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Passer l'instance de UserView
-        UserEditDialog editDialog = new UserEditDialog(this, userToEdit);
-        editDialog.setVisible(true);
-        // Note: loadUsers() est déjà appelé dans le UserEditDialog après l'enregistrement
     }
-    
-    private void supprimerUtilisateur() {
-        int selectedRow = usersTable.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Sélectionnez un utilisateur à supprimer.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+ 
+ // Dans la classe UserView
 
-        String email = (String) tableModel.getValueAt(selectedRow, 2);
-        int confirmation = JOptionPane.showConfirmDialog(this, "Êtes-vous sûr de vouloir supprimer cet utilisateur ?", "Confirmation", JOptionPane.YES_NO_OPTION);
-        if (confirmation != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        String password = JOptionPane.showInputDialog(this, "Veuillez entrer votre mot de passe pour confirmer la suppression :");
-        if (!isPasswordValid(currentUser , password)) {
-            JOptionPane.showMessageDialog(this, "Mot de passe incorrect. Suppression annulée.", "Erreur", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        userController.supprimerUser (email, currentUser );
-        tableModel.removeRow(selectedRow);
-    }
-
-    private boolean isPasswordValid(User currentUser , String password) {
-        return currentUser .getMotDePasse().equals(password);
-    }
-
-    private static class StatusRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            String status = (String) value;
-            cell.setForeground("Actif".equals(status) ? Color.GREEN : Color.RED);
-            return cell;
-        }
-    }
-    private void loadUsers() {
-        List<User> users = userController.lireTousLesUsers();
-        tableModel.setRowCount(0);
-        for (User  user : users) {
-            JLabel editIcon = createIconLabel("/ressources/edit-icon.png", "Modifier", e -> modifierUtilisateur());
-            JLabel deleteIcon = createIconLabel("/ressources/delete-icon.png", "Supprimer", e -> supprimerUtilisateur());
-
-            tableModel.addRow(new Object[]{
+    public void updateUserTable(List<User> users) {
+        // Mettre à jour le modèle de la table avec les utilisateurs filtrés
+        DefaultTableModel tableModel = (DefaultTableModel) userTable.getModel();
+        tableModel.setRowCount(0); // Réinitialiser les lignes existantes de la table
+        
+        // Ajouter les utilisateurs filtrés à la table
+        for (User user : users) {
+            Object[] row = {
+                user.getId(),
                 user.getNom(),
                 user.getPrenom(),
                 user.getEmail(),
                 user.getNumeroTel(),
                 user.getRole(),
-                user.isStatut() ? "Actif" : "Inactif",
-                editIcon,  // Colonne pour l'icône de modification
-                deleteIcon // Colonne pour l'icône de suppression
-            });
+                user.isStatut()
+            };
+            tableModel.addRow(row);
         }
-
-        // Appliquer le renderer aux colonnes d'icônes
-        usersTable.getColumnModel().getColumn(6).setCellRenderer(new IconCellRenderer()); // Modifier
-        usersTable.getColumnModel().getColumn(7).setCellRenderer(new IconCellRenderer()); // Supprimer
     }
-    
-public class UserEditDialog extends JDialog {
-    private JTextField nomField;
-    private JTextField prenomField;
-    private JTextField emailField;
-    private JTextField numeroTelField;
-    private JComboBox<Role> roleComboBox;
-    private JCheckBox statutCheckBox;
-    private User userToEdit;
-    public UserEditDialog(UserView userView, User user) {
-        super(); // Passer userView ici
-        this.userToEdit = user;
 
-        nomField = new JTextField(user.getNom(), 15);
-        prenomField = new JTextField(user.getPrenom(), 15);
-        emailField = new JTextField(user.getEmail(), 15);
-        numeroTelField = new JTextField(user.getNumeroTel(), 15);
-        roleComboBox = new JComboBox<>(Role.values());
-        roleComboBox.setSelectedItem(user.getRole());
-        statutCheckBox = new JCheckBox("Actif", user.isStatut());
-
-        setLayout(new GridLayout(6, 2));
-        add(new JLabel("Nom:"));
-        add(nomField);
-        add(new JLabel("Prénom:"));
-        add(prenomField);
-        add(new JLabel("Email:"));
-        add(emailField);
-        add(new JLabel("Téléphone:"));
-        add(numeroTelField);
-        add(new JLabel("Rôle:"));
-        add(roleComboBox);
-        add(statutCheckBox);
-
-        JButton saveButton = new JButton("Enregistrer");
-        saveButton.addActionListener(e -> {
-            userToEdit.setNom(nomField.getText());
-            userToEdit.setPrenom(prenomField.getText());
-            userToEdit.setEmail(emailField.getText());
-            userToEdit.setNumeroTel(numeroTelField.getText());
-            userToEdit.setRole((Role) roleComboBox.getSelectedItem());
-            userToEdit.setStatut(rootPaneCheckingEnabled);
-         // Appeler la méthode pour mettre à jour l'utilisateur dans le contrôleur
-            userView.getUserController().modifierUser (userToEdit.getEmail(), userToEdit); // Assurez-vous que cette méthode existe
-
-            userView.loadUsers(); // Mettre à jour le tableau après l'enregistrement
-            dispose();
-        });
-        add(saveButton);
-
-        pack();
-        setLocationRelativeTo(userView);
+    public JButton getSearchButton() {
+        return searchButton;
     }
-}
-public UserController getUserController() {
-    return userController;
-}
+    public JComboBox<Role> getRoleComboBox() {
+        return roleComboBox; // Assurez-vous que roleComboBox est un JComboBox
+    }
  
-public class UserAddDialog extends JDialog {
-    private JTextField prenomField; // Inversé
-    private JTextField nomField; // Inversé
-    private JTextField emailField;
-    private JTextField numeroTelField;
-    private JCheckBox statutCheckBox;
-    private UserView userView;
-
-    public UserAddDialog(UserView userView) {
-        super();
-        this.userView = userView;
-
-        prenomField = new JTextField(15);
-        nomField = new JTextField(15);
-        emailField = new JTextField(15);
-        numeroTelField = new JTextField(15);
-        statutCheckBox = new JCheckBox("Actif");
-
-        setLayout(new GridLayout(5, 2)); // Ajusté pour 5 lignes
-        add(new JLabel("Prénom:")); // Inversé
-        add(prenomField); // Inversé
-        add(new JLabel("Nom:")); // Inversé
-        add(nomField); // Inversé
-        add(new JLabel("Email:"));
-        add(emailField);
-        add(new JLabel("Téléphone:"));
-        add(numeroTelField);
-        add(statutCheckBox);
-
-     // Dans UserAddDialog
-        JButton saveButton = new JButton("Enregistrer");
-        saveButton.addActionListener(e -> {
-            String nom = nomField.getText();
-            String prenom = prenomField.getText();
-            String email = emailField.getText();
-            String numeroTel = numeroTelField.getText();
-            boolean actif = statutCheckBox.isSelected(); // Vérifiez si la case est cochée
-
-            // Vérification des champs
-            if (nom.isEmpty() || prenom.isEmpty() || email.isEmpty() || numeroTel.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Tous les champs sont obligatoires.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Vérification de l'email
-            if (userView.getUserController().getUserByEmail(email) != null) {
-                JOptionPane.showMessageDialog(this, "L'email existe déjà.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Vérification du numéro de téléphone (doit être numérique)
-            if (!numeroTel.matches("\\d+")) {
-                JOptionPane.showMessageDialog(this, "Le numéro de téléphone doit contenir uniquement des chiffres.", "Erreur", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Générer un identifiant unique pour l'utilisateur
-            String id = UUID.randomUUID().toString(); // Génération d'un UUID
-
-            // Créer un nouvel utilisateur avec le rôle "Membre"
-            User newUser  = new User(id, nom, prenom, email, numeroTel, "", Role.MEMBRE, actif); // Assurez-vous que le constructeur de User accepte ces paramètres
-            userView.getUserController().ajouterUser (newUser );
-            userView.loadUsers(); // Mettre à jour le tableau après l'ajout
-            dispose();
-        });
-        add(saveButton);
-
-        pack();
-        setLocationRelativeTo(userView);
-    }
-}
-}
+    public void setStatutChecked(boolean statut) {
+        statutCheckBox.setSelected(statut);
+    }}

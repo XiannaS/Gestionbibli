@@ -1,243 +1,211 @@
 package controllers;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.*;
 import model.Role;
 import model.User;
-import org.mindrot.jbcrypt.BCrypt;
-import java.util.Random;
+import model.UserDAO;
+import vue.UserView;
+
+import javax.swing.*;
+import exception.UserException;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Le contrôleur des utilisateurs. Cette classe gère les interactions entre la vue
+ * (UserView) et la base de données (UserDAO) concernant les utilisateurs.
+ * Elle permet d'ajouter, de modifier, de supprimer et de rechercher des utilisateurs.
+ * Elle met également à jour l'affichage de la liste des utilisateurs.
+ */
 
 public class UserController {
-    private final String fichierCSV = "src/main/resources/ressources/users.csv";  // Nom du fichier CSV contenant les utilisateurs
-
+    private UserView userView;
+    private UserDAO userDAO;
     
- // Ajoutez cette méthode à votre classe UserController
- private String generateRandomId(int length) {
-     String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-     StringBuilder id = new StringBuilder();
-     Random random = new Random();
-     for (int i = 0; i < length; i++) {
-         id.append(characters.charAt(random.nextInt(characters.length())));
-     }
-     return id.toString();
- }
+    /**
+     * Constructeur du contrôleur des utilisateurs.
+     * @param userView La vue associée aux utilisateurs.
+     * @param userDAO  Le DAO permettant d'accéder aux données des utilisateurs.
+     */
+    
+    public UserController(UserView userView, UserDAO userDAO) {
+        this.userView = userView;
+        this.userDAO = userDAO;
 
- // Ajoutez cette méthode pour vérifier si l'ID existe déjà
- private boolean idExists(String id) {
-     List<User> users = lireTousLesUsers();
-     for (User  user : users) {
-         if (user.getId().equals(id)) {
-             return true; // L'ID existe déjà
-         }
-     }
-     return false; // L'ID est unique
- }
-
- // Modifiez la méthode ajouterUser 
- public void ajouterUser (User user) {
-     if (user != null) {
-         if (user.getRole() == null) {
-             JOptionPane.showMessageDialog(null, "Rôle invalide.");
-             return;
-         }
-         
-         // Générer un nouvel ID unique de 4 caractères
-         String newId;
-         do {
-             newId = generateRandomId(4);
-         } while (idExists(newId)); // Vérifiez que l'ID n'existe pas déjà
-         user.setId(newId); // Assignez l'ID généré à l'utilisateur
-
-         List<User> users = lireTousLesUsers(); // Récupère tous les utilisateurs
-
-         // Hachez le mot de passe seulement si l'utilisateur est un administrateur
-         if (user.getRole() == Role.ADMINISTRATEUR && user.getMotDePasse() != null && !user.getMotDePasse().isEmpty()) {
-             user.setMotDePasse(hashPassword(user.getMotDePasse()));
-         } else {
-             user.setMotDePasse(""); // Assurez-vous que le mot de passe est vide pour les membres
-         }
-
-         users.add(user);
-         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
-             for (User  u : users) {
-                 writer.write(u.getId() + "," + u.getNom() + "," + u.getPrenom() + "," +
-                              u.getEmail() + "," + u.getNumeroTel() + "," +
-                              u.getMotDePasse() + "," + u.getRole() + "," + u.isStatut());
-                 writer.newLine();
-             }
-         } catch (IOException e) {
-             JOptionPane.showMessageDialog(null, "Erreur lors de l'ajout de l'utilisateur : " + e.getMessage());
-             e.printStackTrace();
-         }
-     }
- }
-
-    // Méthode pour modifier un utilisateur existant
-    public boolean modifierUser (String email, User updatedUser ) {
-        List<String> lignes = new ArrayList<>();
-        boolean userModifie = false;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(fichierCSV))) {
-            String ligne;
-            while ((ligne = reader.readLine()) != null) {
-                String[] details = ligne.split(",");
-                if (details.length == 8 && details[3].equals(email)) { // Vérifiez que vous attendez 8 colonnes
-                    userModifie = true;
-
-                    // Hachez le mot de passe mis à jour seulement si l'utilisateur est un administrateur
-                    String hashedPassword = (updatedUser .getRole() == Role.ADMINISTRATEUR  && updatedUser .getMotDePasse() != null && !updatedUser .getMotDePasse().isEmpty())
-                            ? hashPassword(updatedUser .getMotDePasse())
-                            : ""; // Laissez-le vide pour les membres
-
-     // Remplacez l'utilisateur par ses nouvelles informations
-                    String nouvelleLigne = updatedUser  .getId() + "," +
-                                           updatedUser  .getNom() + "," +
-                                           updatedUser  .getPrenom() + "," +
-                                           updatedUser  .getEmail() + "," +
-                                           updatedUser  .getNumeroTel() + "," +
-                                           hashedPassword + "," +
-                                           updatedUser  .getRole() + "," +
-                                           updatedUser  .isStatut();
-                    lignes.add(nouvelleLigne);
-                } else {
-                    lignes.add(ligne); // Conservez les autres utilisateurs
+        userView.getAjouterButton().addActionListener(e -> ajouterUtilisateur());
+        userView.getModifierButton().addActionListener(e -> modifierUtilisateur());
+        userView.getSupprimerButton().addActionListener(e -> supprimerUtilisateur());
+        userView.getSearchButton().addActionListener(e -> rechercherUtilisateurs());
+        userView.getUserTable().getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = userView.getUserTable().getSelectedRow();
+                if (selectedRow != -1) {
+                    afficherDetailsUtilisateur();
                 }
             }
+        });
 
-            if (userModifie) {
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
-                    for (String l : lignes) {
-                        writer.write(l);
-                        writer.newLine();
-                    }
-                } catch (IOException e) {
-                    JOptionPane.showMessageDialog(null, "Erreur lors de la modification de l'utilisateur : " + e.getMessage());
-                    e.printStackTrace();
-                }
-            }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Erreur lors de la lecture du fichier : " + e.getMessage());
-            e.printStackTrace();
-        }
-        return userModifie;
+        displayUsers();
+        
     }
-    
-    // Méthode pour supprimer un utilisateur
-    public void supprimerUser (String email, User currentUser ) {
-        if (currentUser .getRole() != Role.ADMINISTRATEUR) {
-            JOptionPane.showMessageDialog(null, "Seul un administrateur peut supprimer un utilisateur.");
+    /**
+     * Recherche les utilisateurs en fonction du texte saisi dans le champ de recherche.
+     */
+	private void rechercherUtilisateurs() {
+	    // Récupérer le texte saisi dans le champ de recherche
+	    String query = userView.getSearchField().getText().trim();
+	
+	    // Filtrer les utilisateurs en fonction du texte de recherche
+	    List<User> filteredUsers = userDAO.rechercherParCritere(query);
+	
+	    // Mettre à jour la table avec les utilisateurs filtrés
+	    userView.updateUserTable(filteredUsers);
+	}
+	 /**
+     * Ajoute un nouvel utilisateur à la base de données.
+     * Les données sont récupérées depuis les champs de saisie de la vue.
+     */
+    public void ajouterUtilisateur() {
+        String id = String.valueOf(System.currentTimeMillis());
+        // Utilisation de getText() pour récupérer le contenu des champs
+        String nom = userView.getNomField().getText();
+        String prenom = userView.getPrenomField().getText();
+        String email = userView.getEmailField().getText();
+        String numeroTel = userView.getNumeroTelField().getText();
+        Role role = userView.getSelectedRole();
+        boolean statut = userView.isStatutChecked();
+
+        User user = new User(id, nom, prenom, email, numeroTel, "", role, statut);
+
+        try {
+            userDAO.addUser(user);
+            displayUsers();
+            JOptionPane.showMessageDialog(userView, "Utilisateur ajouté avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+            userView.clearFields();
+        
+        } catch (UserException e) {
+            JOptionPane.showMessageDialog(userView, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    /**
+     * Modifie un utilisateur existant.
+     * L'utilisateur sélectionné dans la vue est mis à jour avec les nouvelles informations saisies.
+     */
+    private void modifierUtilisateur() {
+        int selectedRow = userView.getUserTable().getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(userView, "Veuillez sélectionner un utilisateur à modifier.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Récupérer l'utilisateur à partir de l'email pour l'archiver
-        User userToDelete = getUserByEmail(email);
-        if (userToDelete == null) {
-            JOptionPane.showMessageDialog(null, "Utilisateur non trouvé.");
+        // Récupérer l'ID de l'utilisateur sélectionné
+        String id = (String) userView.getUserTable().getValueAt(selectedRow, 0);
+
+        // Récupérer les valeurs des champs de saisie
+        String nom = userView.getNomField().getText();
+        String prenom = userView.getPrenomField().getText();
+        String email = userView.getEmailField().getText();
+        String numeroTel = userView.getNumeroTelField().getText();
+        Role role = userView.getSelectedRole();
+        boolean statut = userView.isStatutChecked();
+
+        // Créer un objet User avec les nouvelles informations
+        User user = new User(id, nom, prenom, email, numeroTel, "", role, statut);
+
+        try {
+            userDAO.updateUser(user);
+            displayUsers();  // Actualiser l'affichage
+            JOptionPane.showMessageDialog(userView, "Utilisateur mis à jour avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+            userView.clearFields();
+           
+        } catch (UserException e) {
+            JOptionPane.showMessageDialog(userView, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+    /**
+     * Supprime un utilisateur de la base de données.
+     * L'utilisateur sélectionné dans la vue est supprimé.
+     */
+    
+    private void supprimerUtilisateur() {
+        int selectedRow = userView.getUserTable().getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(userView, "Veuillez sélectionner un utilisateur à supprimer.", "Erreur", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        // Archive l'utilisateur
-        archiveUser (userToDelete);
-
-        List<String> lignes = new ArrayList<>();
-        boolean userSupprime = false;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(fichierCSV))) {
-            String ligne;
-            while ((ligne = reader.readLine()) != null) {
-                String[] details = ligne.split(",");
-                if (details.length == 5 && details[2].equals(email)) {
-                    userSupprime = true; // Utilisateur trouvé pour suppression
-                } else {
-                    lignes.add(ligne); // Conserver les autres utilisateurs
-                }
-            }
+        
+        // Récupérer l'ID de l'utilisateur sélectionné
+        String id = (String) userView.getUserTable().getValueAt(selectedRow, 0);
+        
+        try {
+            userDAO.deleteUser (id); // Suppression de l'utilisateur
+            userView.clearFields();
+            JOptionPane.showMessageDialog(userView, "Utilisateur supprimé avec succès.", "Succès", JOptionPane.INFORMATION_MESSAGE);
+            userView.clearFields();
+            displayUsers(); // Actualiser l'affichage
         } catch (IOException e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(userView, "Erreur lors de la suppression de l'utilisateur : " + e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
+    }
+    /**
+     * Affiche les détails d'un utilisateur sélectionné.
+     * Les champs de saisie de la vue sont pré-remplis avec les données de l'utilisateur.
+     */
+    private void afficherDetailsUtilisateur() {
+        // Récupérer la ligne sélectionnée
+        int selectedRow = userView.getUserTable().getSelectedRow();
+        if (selectedRow != -1) {
+            // Récupérer l'ID de l'utilisateur à partir de la table (supposons que l'ID soit dans la première colonne)
+            String userId = (String) userView.getUserTable().getValueAt(selectedRow, 0);
+            
+            // Rechercher l'utilisateur par ID dans le DAO
+            User selectedUser = userDAO.rechercherParID(userId);
 
-        if (userSupprime) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV))) {
-                for (String l : lignes) {
-                    writer.write(l);
-                    writer.newLine();
-                }
-                JOptionPane.showMessageDialog(null, "Utilisateur supprimé avec succès.");
-            } catch (IOException e) {
-                e.printStackTrace();
+            // Si l'utilisateur est trouvé, pré-remplir les champs du formulaire
+            if (selectedUser != null) {
+                userView.getNomField().setText(selectedUser.getNom());
+                userView.getPrenomField().setText(selectedUser.getPrenom());
+                userView.getEmailField().setText(selectedUser.getEmail());
+                userView.getNumeroTelField().setText(selectedUser.getNumeroTel());
+                userView.getRoleComboBox().setSelectedItem(selectedUser.getRole());
+                userView.getStatutCheckBox().setSelected(selectedUser.isStatut());
             }
-        } else {
-            JOptionPane.showMessageDialog(null, "Utilisateur non trouvé.");
         }
     }
 
-    // Méthode pour archiver l'utilisateur
-    private void archiveUser (User user) {
-        // Implémentez votre logique d'archivage ici
-        // Par exemple, vous pouvez écrire l'utilisateur dans un fichier d'archive
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/ressources/archived_users.csv", true))) {
-            writer.write(user.getNom() + "," + user.getPrenom() + "," + user.getEmail() + "," + user.getNumeroTel() + "," + user.getRole());
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+    /**
+     * Récupère le nombre d'utilisateurs inactifs.
+     * @return Le nombre d'utilisateurs inactifs.
+     */
+    public int getNombreUtilisateursInactifs() {
+        return Math.toIntExact(userDAO.getAllUsers().stream().filter(user -> !user.isStatut()).count());
     }
 
-    // Méthode pour récupérer un utilisateur par email
-    public User getUserByEmail(String email) {
-        List<User> users = lireTousLesUsers();
-        for (User  user : users) {
-            if (user.getEmail().equals(email)) {
-                return user;
-            }
-        }
-        return null; // Utilisateur non trouvé
+    /**
+     * Récupère le nombre d'utilisateurs actifs.
+     * @return Le nombre d'utilisateurs actifs.
+     */
+    public int getNombreUtilisateursActifs() {
+        return Math.toIntExact(userDAO.getAllUsers().stream().filter(User::isStatut).count());
     }
- 
-    // Méthode pour lire tous les utilisateurs depuis le fichier CSV
-    public List<User> lireTousLesUsers() {
-        List<User> users = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(fichierCSV))) {
-            String ligne;
-            while ((ligne = reader.readLine()) != null) {
-                String[] details = ligne.split(",");
-                if (details.length == 8) { // Assurez-vous que vous attendez 8 colonnes
-                    try {
-                        String id = details[0]; // Lire l'identifiant
-                        String nom = details[1];
-                        String prenom = details[2];
-                        String email = details[3];
-                        String numeroTel = details[4]; // Lire le numéro de téléphone
-                        String motDePasse = details[5]; // Haché ou vide
-                        Role role = Role.valueOf(details[6].toUpperCase()); // Convertir la chaîne en énumération Role
-                        boolean statut = Boolean.parseBoolean(details[7]); // Lire le statut
 
-                        // Créez l'utilisateur avec tous les champs, y compris l'identifiant
-                        User user = new User(id, nom, prenom, email, numeroTel, motDePasse, role, statut);
-                        users.add(user);
-                    } catch (IllegalArgumentException e) {
-                        System.err.println("Rôle inconnu dans la ligne : " + ligne);
-                    }
-                } else {
-                    System.err.println("Ligne ignorée (format incorrect) : " + ligne);
-                }
-            }
-            System.out.println("Nombre d'utilisateurs lus : " + users.size());
-        } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "Le fichier des utilisateurs est introuvable : " + e.getMessage());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Erreur lors de la lecture des utilisateurs : " + e.getMessage());
-            e.printStackTrace();
-        }
-        return users;
+    /**
+     * Met à jour l'affichage des utilisateurs dans la vue.
+     */
+    public void displayUsers() {
+        List<User> users = userDAO.getAllUsers();
+        userView.displayUsers(users);
     }
     
-    // Méthode pour hacher un mot de passe
-    private String hashPassword(String password) {
-        return BCrypt.hashpw(password, BCrypt.gensalt());
+    // Méthode pour obtenir les utilisateurs actifs
+    public List<User> getActiveUsers() {
+        return userDAO.getAllUsers().stream()
+                .filter(User::isStatut) // Filtrer les utilisateurs actifs
+                .collect(Collectors.toList());
     }
-
  
 }

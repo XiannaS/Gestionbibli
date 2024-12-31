@@ -1,4 +1,4 @@
-package model;
+ package model;
 
 public class User {
     private String id; // Identifiant unique
@@ -26,7 +26,9 @@ public class User {
     public String getNom() {
         return nom;
     }
-
+    public boolean isActive() {
+        return statut; // Retourne true si l'utilisateur est actif, false sinon
+    }
     public void setNom(String nom) {
         this.nom = nom;
     }
@@ -99,4 +101,7 @@ public class User {
                 ", statut=" + statut + // statut est un booléen, donc il n'y a pas de problème à l'afficher
                 '}';
     }
+
+ 
+
 }

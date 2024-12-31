@@ -1,224 +1,290 @@
 package controllers;
 
 import model.Emprunt;
+import model.EmpruntDAO;
 import model.Livre;
-import model.Role;
+import model.LivreDAO;
 import model.User;
+import model.UserDAO;
+import vue.EmpruntView;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import javax.swing.*;
+
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class EmpruntController {
-
-    private List<Emprunt> emprunts; // Liste pour stocker les emprunts
-    private List<Livre> livres; // Liste pour stocker les livres
-    private List<User> users; // Liste pour stocker les utilisateurs
-    private static final String FILE_PATH = "src/main/java/database/emprunt.csv"; // Chemin relatif vers le fichier CSV
-
-    // Constructeur
-    public EmpruntController() {
-        this.emprunts = new ArrayList<>();
-        this.livres = new ArrayList<>(); // Initialiser la liste des livres
-        this.users = new ArrayList<>(); // Initialiser la liste des utilisateurs
-        loadEmpruntsFromCSV(); // Charger les emprunts depuis le fichier CSV au démarrage
-        loadLivresFromCSV(); // Charger les livres depuis le fichier CSV
-        loadUsersFromCSV(); // Charger les utilisateurs depuis le fichier CSV
+    private EmpruntDAO empruntModel;
+    private static final int MAX_RENEWALS = 1;
+    private UserDAO userDAO;
+    private LivreDAO livreDAO;
+    private EmpruntView empruntView;
+    private List<Livre> livres;
+     // Initialisation de la liste
+    public EmpruntController(EmpruntView empruntView, String csvFileEmprunts, String csvFileLivres, String csvFileUsers) {
+        this.empruntModel = new EmpruntDAO(csvFileEmprunts);
+        this.livreDAO = new LivreDAO(csvFileLivres);
+        this.userDAO = new UserDAO(csvFileUsers);
+        this.empruntView = empruntView;
+        ajouterEcouteurs();
+        chargerEmprunts("Tous");
+        
     }
-    /**
-     * Enregistre un nouvel emprunt dans la liste.
-     * @param utilisateurId L'ID de l'utilisateur qui emprunte le livre.
-     * @param livreId L'ID du livre emprunté.
-     * @param dateEmprunt La date d'emprunt du livre.
-     * @param dateRetour La date de retour prévue pour l'emprunt.
-     */
-    // Méthodes pour récupérer les utilisateurs et les livres
-    public List<User> getUsers() {
-        return users;
+    public List<Emprunt> getEmprunts() {
+        return empruntModel.listerEmprunts(); // Retourne la liste des emprunts
+    }
+    public boolean hasActiveEmpruntsForBook(int livreId) {
+        return empruntModel.listerEmprunts().stream()
+                .anyMatch(emprunt -> emprunt.getLivreId() == livreId && !emprunt.isRendu());
     }
 
-    public List<Livre> getLivres() {
-        return livres;
-    }
-    // Ajoutez ici les méthodes pour charger les livres et les utilisateurs depuis leurs fichiers CSV respectifs
-private void loadLivresFromCSV() {
-    try (BufferedReader br = new BufferedReader(new FileReader("src/main/resources/ressources/books.csv"))) {
-        String line;
-        while ((line = br.readLine()) != null) {
-            String[] data = line.split(",");
-            if (data.length >= 6) { // Ajustez en fonction de votre structure de données
-                String id = data[0];
-                String titre = data[1];
-                String auteur = data[2];
-                String genre = data[3];
-                int anneePublication = Integer.parseInt(data[4]);
-                boolean disponible = Boolean.parseBoolean(data[5]);
-                Livre livre = new Livre(id, titre, auteur, genre, anneePublication, disponible, null); // Assurez-vous que le constructeur existe
-                livres.add(livre);
+    private void ajouterEcouteurs() {
+        empruntView.getRetournerButton().addActionListener(e -> {
+            try {
+                int empruntId = getSelectedEmpruntId();
+                retournerLivre(empruntId);
+                chargerEmprunts("Tous"); 
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(empruntView, ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
             }
-        }
-    } catch (IOException e) {
-        e.printStackTrace();
-        System.out.println("Erreur lors du chargement des livres.");
-    }
-}
+        });
 
-private void loadUsersFromCSV() {
-    try (BufferedReader br = new BufferedReader(new FileReader("src/main/resources/ressources/users.csv"))) {
-        String line;
-        while ((line = br.readLine()) != null) {
-            String[] data = line.split(",");
-            if (data.length >= 8) { // Ajustez en fonction de votre structure de données
-                String id = data[0];
-                String nom = data[1];
-                String prenom = data[2];
-                String email = data[3];
-                String numeroTel = data[4];
-                String motDePasse = data[5];
-                Role role = Role.valueOf(data[6]); // Assurez-vous que le rôle est bien défini
-                boolean statut = Boolean.parseBoolean(data[7]);
-                User user = new User(id, nom, prenom, email, numeroTel, motDePasse, role, statut);
-                users.add(user);
-            }
-        }
-    } catch (IOException e) {
-        e.printStackTrace();
-        System.out.println("Erreur lors du chargement des utilisateurs.");
-    }
-}
-    public void ajouterEmprunt(int utilisateurId, String livreId, LocalDate dateEmprunt, LocalDate dateRetour) {
-        // Validation des données
-        if (!utilisateurExists(utilisateurId)) {
-            System.out.println("L'utilisateur avec l'ID " + utilisateurId + " n'existe pas.");
-            return;
-        }
-        if (!livreExists(livreId)) {
-            System.out.println("Le livre avec l'ID " + livreId + " n'existe pas.");
-            return;
-        }
-        if (!isLivreDisponible(livreId)) {
-            System.out.println("Le livre avec l'ID " + livreId + " n'est pas disponible.");
-            return;
-        }
-
-        int id = emprunts.size() + 1; // Générer un ID automatique
-        Emprunt emprunt = new Emprunt(id, utilisateurId, livreId, dateEmprunt, dateRetour, false);
-        emprunts.add(emprunt);
-        saveEmpruntsToCSV(); // Sauvegarder les emprunts dans le fichier CSV
-        System.out.println("Emprunt ajouté : " + emprunt);
-    }
-
-    /**
-     * Supprime un emprunt de la liste si celui-ci a été marqué comme retourné.
-     * @param idEmprunt L'identifiant de l'emprunt à supprimer.
-     */
-    public void supprimerEmprunt(int idEmprunt) {
-        for (int i = 0; i < emprunts.size(); i++) {
-            Emprunt emprunt = emprunts.get(i);
-            if (emprunt.getId() == idEmprunt && emprunt.isEstRendu()) {
-                emprunts.remove(i);
-                saveEmpruntsToCSV(); // Sauvegarder les emprunts dans le fichier CSV
-                System.out.println("Emprunt supprimé : " + emprunt);
-                return;
-            }
-        }
-        System.out.println("Aucun emprunt trouvé avec cet ID ou il n'est pas encore retourné.");
-    }
-
-    /**
-     * Modifie la date de retour d'un emprunt existant.
-     * @param idEmprunt L'identifiant de l'emprunt à modifier.
-     * @param nouvelleDateRetour La nouvelle date de retour prévue.
-     */
-    public void modifierDateRetour(int idEmprunt, LocalDate nouvelleDateRetour) {
-        for (Emprunt emprunt : emprunts) {
-            if (emprunt.getId() == idEmprunt && !emprunt.isEstRendu()) {
-                emprunt.setDateRetour(nouvelleDateRetour);
-                saveEmpruntsToCSV(); // Sauvegarder les emprunts dans le fichier CSV
-                System.out.println("Date de retour modifiée pour l'emprunt : " + emprunt);
-                return;
-            }
-        }
-        System.out.println("Aucun emprunt trouvé avec cet ID ou il est déjà retourné.");
-    }
-
-    /**
-     * Affiche l'historique de tous les emprunts, incluant ceux qui ont été retournés.
-     * @return La liste des emprunts.
-     */
-    public List<Emprunt> afficherHistoriqueEmprunts() {
-        return this.emprunts;
-    }
-
-    /**
-     * Charge les emprunts depuis le fichier CSV.
-     */
-    private void loadEmpruntsFromCSV() {
-        try (BufferedReader br = new BufferedReader(new FileReader(FILE_PATH))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] data = line.split(",");
-                if (data.length >= 5) {
-                    int id = Integer.parseInt(data[0]);
-                    int utilisateurId = Integer.parseInt(data[1]);
-                    String livreId = data[2];
-                    LocalDate dateEmprunt = LocalDate.parse(data[3]);
-                    LocalDate dateRetour = LocalDate.parse(data[4]);
-                    boolean estRendu = Boolean.parseBoolean(data[5]);
-                    Emprunt emprunt = new Emprunt(id, utilisateurId, livreId, dateEmprunt, dateRetour, estRendu);
-                    emprunts.add(emprunt);
+        empruntView.getRenouvelerButton().addActionListener(e -> {
+            try {
+                int empruntId = getSelectedEmpruntId();
+                boolean renouvellement = renouvelerEmprunt(empruntId);
+                if (renouvellement) {
+                	
+                    JOptionPane.showMessageDialog(empruntView, "Renouvellement réussi !");
+                    chargerEmprunts("Tous"); // Recharge la liste des emprunts après renouvellement
+                } else {
+                    JOptionPane.showMessageDialog(empruntView, "Impossible de renouveler cet emprunt.");
                 }
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(empruntView, ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Erreur lors du chargement des emprunts.");
+        });
+
+
+        empruntView.getSupprimerButton().addActionListener(e -> {
+            try {
+                int empruntId = getSelectedEmpruntId();
+                supprimerEmprunt(empruntId);
+            } catch (IllegalStateException ex) {
+                JOptionPane.showMessageDialog(empruntView, ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        empruntView.getSearchButton().addActionListener(e -> {
+            String searchTerm = empruntView.getSearchField().getText();
+            String searchType = (String) empruntView.getSearchTypeComboBox().getSelectedItem();
+            chargerEmprunts(searchTerm, searchType);
+        });
+
+        empruntView.getTriComboBox().addActionListener(e -> {
+            String selectedCriteria = (String) empruntView.getTriComboBox().getSelectedItem();
+            chargerEmprunts(selectedCriteria);
+        });
+        // Écouteur pour le bouton "Tout Supprimer"
+        empruntView.getToutSupprimerButton().addActionListener(e -> {
+            int confirmation = JOptionPane.showConfirmDialog(empruntView, "Êtes-vous sûr de vouloir supprimer tous les emprunts ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+            if (confirmation == JOptionPane.YES_OPTION) {
+                try {
+					supprimerTousLesEmprunts();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+            }
+        });
+    }
+    public void supprimerTousLesEmprunts() throws IOException {
+        empruntModel.supprimerTousLesEmprunts(); // Méthode à implémenter dans EmpruntDAO
+        chargerEmprunts("Tous"); // Recharge la liste des emprunts
+        JOptionPane.showMessageDialog(empruntView, "Tous les emprunts ont été supprimés avec succès !");
+    }
+    // Méthode pour obtenir le titre du livre par ID
+    public String getTitreLivreById(int livreId) {
+        Livre livre = livreDAO.rechercherParID(livreId);
+        return (livre != null) ? livre.getTitre() : "Livre non trouvé";
+    }
+    
+    public void chargerEmprunts(String searchTerm, String searchType) {
+        List<Emprunt> emprunts = empruntModel.listerEmprunts();  // Récupérer directement tous les emprunts depuis le DAO
+        try {
+            switch (searchType) {
+                case "ID Emprunt":
+                    emprunts = emprunts.stream().filter(e -> e.getId() == Integer.parseInt(searchTerm)).collect(Collectors.toList());
+                    break;
+                case "ID Livre":
+                    emprunts = emprunts.stream().filter(e -> e.getLivreId() == Integer.parseInt(searchTerm)).collect(Collectors.toList());
+                    break;
+                case "ID Utilisateur":
+                    emprunts = emprunts.stream().filter(e -> e.getUserId().equals(searchTerm)).collect(Collectors.toList());
+                    break;
+                case "Date":
+                    LocalDate date = LocalDate.parse(searchTerm);
+                    emprunts = emprunts.stream().filter(e -> e.getDateEmprunt().isEqual(date)).collect(Collectors.toList());
+                    break;
+                default:
+                    break; // Aucun filtrage, tout afficher
+            }
+        } catch (NumberFormatException | DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(empruntView, "Erreur de format : " + ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+        empruntView.updateEmpruntsTable(emprunts, livreDAO);
+    }
+
+
+    public void chargerEmprunts(String criteria) {
+        List<Emprunt> emprunts = empruntModel.listerEmprunts(); // Récupérer tous les emprunts depuis le DAO
+        // Logique de tri
+        switch (criteria) {
+            case "En cours":
+                emprunts = emprunts.stream().filter(e -> !e.isRendu()).collect(Collectors.toList());
+                break;
+            case "Historique":
+                emprunts = emprunts.stream().filter(Emprunt::isRendu).collect(Collectors.toList());
+                break;
+            case "Par pénalités":
+                emprunts.sort(Comparator.comparingDouble(Emprunt::getPenalite).reversed());
+                break;
+            default:
+                break; // "Tous" ne nécessite pas de filtrage
+        }
+        empruntView.updateEmpruntsTable(emprunts, livreDAO);
+    }
+
+ 
+    private int getSelectedEmpruntId() {
+        int selectedRow = empruntView.getEmpruntTable().getSelectedRow();
+        if (selectedRow == -1) {
+            throw new IllegalStateException("Aucun emprunt sélectionné");
+        }
+        return (int) empruntView.getEmpruntTable().getValueAt(selectedRow, 0);
+    }
+
+    public void retournerLivre(int empruntId) {
+        // Logique pour retourner un livre
+        Emprunt emprunt = empruntModel.getEmpruntById(empruntId); // Récupérer l'emprunt par son ID
+        if (emprunt != null && !emprunt.isRendu()) {
+            // Marquer l'emprunt comme retourné
+            empruntModel.retournerLivre(empruntId); // Appel à la méthode qui met à jour l'état de l'emprunt
+            // Mettre à jour le livre pour marquer qu'un exemplaire a été retourné
+            Livre livre = livreDAO.rechercherParID(emprunt.getLivreId());
+            if (livre != null) {
+                livre.retourner(); // Appeler la méthode retourner sur le livre
+                livreDAO.updateLivre(livre); // Mettre à jour l'état du livre dans le DAO
+            } else {
+                throw new IllegalStateException("Livre non trouvé.");
+            }
+        } else {
+            throw new IllegalStateException("Cet emprunt a déjà été retourné.");
         }
     }
 
-    /**
-     * Sauvegarde les emprunts dans le fichier CSV.
-     */
-    private void saveEmpruntsToCSV() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_PATH))) {
-            for (Emprunt emprunt : emprunts) {
-                bw.write(emprunt.getId() + "," + emprunt.getUtilisateurId() + "," + emprunt.getLivreId() + "," +
-                        emprunt.getDateEmprunt() + "," + emprunt.getDateRetour() + "," + emprunt.isEstRendu());
-                bw.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Erreur lors de la sauvegarde des emprunts.");
+
+    public boolean renouvelerEmprunt(int empruntId) {
+        System.out.println("Tentative de renouvellement pour l'emprunt ID: " + empruntId);
+
+        Emprunt emprunt = empruntModel.getEmpruntById(empruntId);
+        
+        if (emprunt == null) {
+            System.out.println("Emprunt non trouvé.");
+            return false; // Emprunt non trouvé
         }
+        if (emprunt.isRendu()) {
+            System.out.println("Emprunt déjà rendu, ne peut pas être renouvelé.");
+            return false; // Emprunt déjà rendu, ne peut pas être renouvelé
+        }
+        if (emprunt.getNombreRenouvellements() >= MAX_RENEWALS) {
+            System.out.println("Emprunt atteint le nombre maximum de renouvellements.");
+            return false; // Emprunt ne peut pas être renouvelé
+            
+        }
+        if (emprunt.getDateRetourPrevue().isBefore(LocalDate.now())) {
+            emprunt.setPenalite(emprunt.getPenalite() + 5);  // Assuming 5 is the penalty fee for overdue books
+        }
+
+        // Logique pour renouveler l'emprunt
+        System.out.println("Renouvellement de l'emprunt : nouvelle date de retour prévue : " + emprunt.getDateRetourPrevue().plusDays(14));
+        emprunt.setDateRetourPrevue(emprunt.getDateRetourPrevue().plusDays(14)); // Exemple de renouvellement
+        emprunt.incrementerNombreRenouvellements();
+        empruntModel.updateEmprunt(emprunt); // Mettez à jour l'emprunt dans le modèle
+        System.out.println("Renouvellement réussi.");
+        return true; // Renouvellement réussi
     }
 
-    // Méthodes de validation des données
-    private boolean utilisateurExists(int utilisateurId) {
-        // Vérifier si l'utilisateur existe dans la base de données
-        return true; // À remplacer par la logique de vérification de l'existence de l'utilisateur
+
+
+    public void supprimerEmprunt(int empruntId) {
+        int confirmation = JOptionPane.showConfirmDialog(empruntView, "Êtes-vous sûr de vouloir supprimer cet emprunt ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+        if (confirmation == JOptionPane.YES_OPTION) {
+            empruntModel.supprimerEmprunt(empruntId);
+            chargerEmprunts("Tous"); // Recharge la liste des emprunts
+            JOptionPane.showMessageDialog(empruntView, "Emprunt supprimé avec succès !");
+        }
+    }
+    public void ajouterEmprunt(Emprunt emprunt) {
+        // Vérifiez si le livre est disponible avant d'ajouter l'emprunt
+        Livre livre = livreDAO.rechercherParID(emprunt.getLivreId());
+        if (livre != null && livre.isDisponible()) {
+            empruntModel.ajouterEmprunt(emprunt); // Ajouter l'emprunt au DAO
+            livre.emprunter(); // Mettre à jour le livre
+            livreDAO.updateLivre(livre); // Mettre à jour le livre dans le DAO
+        } else {
+            throw new IllegalStateException("Le livre n'est pas disponible pour emprunt.");
+        }
+        }
+
+    public String getTitreLivre(int livreId) {
+    	for (Livre livre : livres) {
+    		if (livre.getId() == livreId) {
+    			return livre.getTitre();
+    			} } 
+    	return "Titre inconnu"; // Retourne une valeur par défaut si le livre n'est pas trouvé }
+    }
+    
+ // Récupérer l'historique des emprunts d'un utilisateur
+    public List<Emprunt> getHistoriqueEmprunts(String userId) {
+        return empruntModel.listerEmprunts().stream()
+                .filter(emprunt -> emprunt.getUserId().equals(userId))
+                .collect(Collectors.toList());
     }
 
-    private boolean livreExists(String livreId) {
-        // Vérifier si le livre existe dans la liste des livres
-        for (Livre livre : livres) {
-            if (livre.getId().equals(livreId)) {
-                return true;
-            }
-        }
-        return false;
+    public int generateEmpruntId() {
+        // Logique pour générer un nouvel ID unique pour un emprunt
+        return empruntModel.listerEmprunts().size() + 1; // Exemple simple
+    }
+    
+    public boolean hasActiveEmprunts(String userId) {
+        return empruntModel.listerEmprunts().stream()
+            .anyMatch(emprunt -> emprunt.getUserId().equals(userId) && !emprunt.isRendu());
     }
 
-    private boolean isLivreDisponible(String livreId) {
-        // Vérifier si le livre est disponible
-        for (Livre livre : livres) {
-            if (livre.getId().equals(livreId)) {
-                return livre.isDisponible();
-            }
-        }
-        return false; // Livre non trouvé ou non disponible
+    
+    public boolean isUserActive(String userId) {
+        // Vérifie si l'utilisateur est actif
+        User user = userDAO.getUserById(userId);
+        return user != null && user.isActive(); // Assurez-vous que User a la méthode isActive
     }
+
+  
+    public boolean hasActiveEmpruntForUser(String userId, int livreId) {
+        return empruntModel.listerEmprunts().stream()
+                .anyMatch(emprunt -> emprunt.getUserId().equals(userId)
+                        && emprunt.getLivreId() == livreId
+                        && !emprunt.isRendu());
+    }
+
+    public List<Emprunt> getEmpruntsByYear(int year) {
+        return empruntModel.listerEmprunts().stream() // Utiliser le modèle pour obtenir la liste des emprunts
+                .filter(e -> e.getDateEmprunt().getYear() == year)
+                .collect(Collectors.toList());
+    }
+
 }

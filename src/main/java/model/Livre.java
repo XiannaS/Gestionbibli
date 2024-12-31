@@ -1,37 +1,94 @@
 package model;
-
 public class Livre {
-    private String id;
+    private int id;
     private String titre;
     private String auteur;
     private String genre;
     private int anneePublication;
-    private boolean disponible;
-    private String imageUrl; 
-    
-    // Constructeur avec ID
-    public Livre(String id, String titre, String auteur, String genre, int anneePublication, boolean disponible, String imageUrl) {
+    private String imageUrl;
+    private String isbn; // Ajout de l'ISBN
+    private String description; // Ajout d'une description
+    private String editeur; // Ajout de l'éditeur
+    private int totalExemplaires; // Nombre total d'exemplaires
+    private int exemplairesDisponibles; // Nombre d'exemplaires disponibles
+
+    // Constructeur
+    public Livre(int id, String titre, String auteur, String genre, int anneePublication, String imageUrl, String isbn, String description, String editeur, int totalExemplaires) {
         this.id = id;
         this.titre = titre;
         this.auteur = auteur;
         this.genre = genre;
         this.anneePublication = anneePublication;
-        this.disponible = disponible;
         this.imageUrl = imageUrl;
-    }
-
-    // Constructeur sans ID pour création
-    public Livre(String titre, String auteur, String genre, int anneePublication, boolean disponible, String imageUrl) {
-        this(null, titre, auteur, genre, anneePublication, disponible, imageUrl);
+        this.isbn = isbn;
+        this.description = description;
+        this.editeur = editeur;
+        this.totalExemplaires = totalExemplaires;
+        this.exemplairesDisponibles = totalExemplaires; // Initialement, tous les exemplaires sont disponibles
     }
 
     // Getters et Setters
+    public String getIsbn() {
+        return isbn;
+    }
 
-    public String getId() {
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getEditeur() {
+        return editeur;
+    }
+
+    public void setEditeur(String editeur) {
+        this.editeur = editeur;
+    }
+
+    public int getExemplairesDisponibles() {
+        return exemplairesDisponibles;
+    }
+
+    public int getTotalExemplaires() {
+        return totalExemplaires; // Retourne le nombre total d'exemplaires
+    }
+    
+    public void setTotalExemplaires(int totalExemplaires) {
+        this.totalExemplaires = totalExemplaires;
+    }
+    
+    public void emprunter() {
+        if (exemplairesDisponibles > 0) {
+            exemplairesDisponibles--;  // Décrémenter le nombre d'exemplaires disponibles
+        } else {
+            throw new IllegalStateException("Aucun exemplaire disponible pour emprunt.");
+        }
+    }
+    
+    public void retourner() {
+        if (exemplairesDisponibles < totalExemplaires) {
+            exemplairesDisponibles++; // Incrémenter uniquement les exemplaires disponibles
+        }
+    }
+
+    public boolean isDisponible() {
+        return exemplairesDisponibles > 0; // Un livre est disponible s'il y a des exemplaires disponibles
+    }
+
+ 
+    // Getters et Setters
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -67,14 +124,6 @@ public class Livre {
         this.anneePublication = anneePublication;
     }
 
-    public boolean isDisponible() {
-        return disponible;
-    }
-
-    public void setDisponible(boolean disponible) {
-        this.disponible = disponible;
-    }
-
     public String getImageUrl() {
         return imageUrl;
     }
@@ -82,23 +131,12 @@ public class Livre {
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
-
-        // Méthode pour formater en CSV
-        public String toCsvFormat() {
-            return String.join(",", 
-                id != null ? id : "N/A",  // Remplace par "N/A" si id est null
-                titre != null ? titre : "N/A",  // Remplace par "N/A" si titre est null
-                auteur != null ? auteur : "N/A",  // Remplace par "N/A" si auteur est null
-                genre != null ? genre : "N/A",  // Remplace par "N/A" si genre est null
-                String.valueOf(anneePublication),
-                disponible ? "Yes" : "No",  // Remplace true/false par Yes/No
-                imageUrl != null ? imageUrl : "N/A"  // Remplace par "N/A" si imageUrl est null
-            );
-        }
-
-        @Override
-        public String toString() {
-            return toCsvFormat();
-        }
+    public void setExemplairesDisponibles(int exemplairesDisponibles) {
+        this.exemplairesDisponibles = exemplairesDisponibles;
     }
-
+    @Override
+    public String toString() {
+        return id + ";" + titre + ";" + auteur + ";" + genre + ";" + anneePublication + ";" + imageUrl + ";" + 
+               isbn + ";" + description + ";" + editeur + ";" + totalExemplaires;
+    }
+}

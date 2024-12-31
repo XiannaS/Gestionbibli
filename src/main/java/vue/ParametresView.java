@@ -6,22 +6,16 @@ import controllers.UserController;
 import model.User;
 
 import java.util.List;
-import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 public class ParametresView extends JPanel {
 
-    private JTextField currentRoleField; // Champ pour afficher le rôle actuel
-    private User currentUser ; // L'utilisateur actuellement connecté
-    private UserController userController; // Instance de votre contrôleur
-    private List<User> userList; // Liste des utilisateurs
-
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JTextField currentRoleField; // Champ pour afficher le rôle actuel
     public ParametresView(User currentUser , UserController userController, List<User> userList) {
-        this.currentUser  = currentUser ;
-        this.userController = userController;
-        this.userList = userList;
-
         // Initialisation des composants
         setLayout(new BorderLayout()); // Utilisation d'un layout pour organiser les composants
 
