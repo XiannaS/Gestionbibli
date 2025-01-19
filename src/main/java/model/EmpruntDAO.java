@@ -166,7 +166,19 @@ public class EmpruntDAO {
         }
         throw new IllegalArgumentException("Emprunt non trouvé ou déjà retourné.");
     }
+    
+    public List<Emprunt> getEmpruntsByUserId(String userId) {
+        List<Emprunt> empruntsUtilisateur = new ArrayList<>();
 
+        // Filtrer les emprunts en fonction du userId
+        for (Emprunt emprunt : emprunts) {
+            if (emprunt.getUserId().equals(userId)) {
+                empruntsUtilisateur.add(emprunt);
+            }
+        }
+
+        return empruntsUtilisateur;
+    }
 
 
 

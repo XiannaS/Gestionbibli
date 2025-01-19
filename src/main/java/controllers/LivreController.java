@@ -238,7 +238,11 @@ public class LivreController {
 	                    JOptionPane.showMessageDialog(livreView, "L'utilisateur n'est pas actif ou a des pénalités.", "Erreur", JOptionPane.ERROR_MESSAGE);
 	                    return;
 	                }
-
+	                // Vérifier si l'utilisateur a des pénalités
+	                if (empruntController.hasPenalties(userIdStr)) {
+	                    JOptionPane.showMessageDialog(livreView, "L'utilisateur a des pénalités en attente.", "Erreur", JOptionPane.ERROR_MESSAGE);
+	                    return;
+	                }
 	                // Récupérer le livre sélectionné
 	                Livre livre = livreDAO.getAllLivres().get(selectedIndex);
 

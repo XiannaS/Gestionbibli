@@ -265,7 +265,19 @@ public class EmpruntController {
         return user != null && user.isActive(); // Assurez-vous que User a la méthode isActive
     }
 
-  
+    public boolean hasPenalties(String userId) {
+        // Récupérer les emprunts de l'utilisateur
+        List<Emprunt> empruntsUtilisateur = empruntModel.getEmpruntsByUserId(userId);
+
+        // Vérifier si l'utilisateur a des pénalités
+        for (Emprunt emprunt : empruntsUtilisateur) {
+            if (emprunt.getPenalite() > 0) {
+                return true; // L'utilisateur a une pénalité
+            }
+        }
+        return false; // Pas de pénalité
+    }
+
     public boolean hasActiveEmpruntForUser(String userId, int livreId) {
         return empruntModel.listerEmprunts().stream()
                 .anyMatch(emprunt -> emprunt.getUserId().equals(userId)
