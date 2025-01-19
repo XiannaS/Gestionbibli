@@ -1,10 +1,6 @@
 package com.gestionbibli.app;
 
-import vue.BibliothequeApp;
 import vue.ConnexionView;
-import javax.swing.*;
-
-import controllers.BibliothequeAppController;
 import controllers.ConnexionController;
 import model.UserDAO;
 
@@ -19,13 +15,19 @@ public class MainApp {
             e.printStackTrace();
         }
 
-        // Create an instance of BibliothequeApp
-        BibliothequeApp bibliothequeApp = new BibliothequeApp();
+        // Create an instance of ConnexionView
+        ConnexionView connexionView = new ConnexionView();
 
-        // Create the controller for the application
-        BibliothequeAppController controller = new BibliothequeAppController(bibliothequeApp);
+        // Define the path for the user data file 
+        String userDataFilePath = "src/main/resources/data/users.csv"; // Replace with your actual file path
 
-        // Set the application to be visible
-        bibliothequeApp.setVisible(true);
+        // Create an instance of UserDAO with the file path
+        UserDAO userDAO = new UserDAO(userDataFilePath);
+
+        // Create the controller for the connection view with UserDAO
+        ConnexionController connexionController = new ConnexionController(connexionView, userDAO);
+
+        // Set the connection view to be visible
+        connexionView.setVisible(true);
     }
 }

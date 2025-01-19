@@ -19,12 +19,21 @@ public class DashboardView extends JPanel {
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         controlPanel.setBackground(new Color(0xEAEAEA));
 
+        // Bouton "Générer Rapport"
         generateReportButton = new JButton("Générer Rapport");
         generateReportButton.setBackground(new Color(0x2196F3));
         generateReportButton.setForeground(Color.WHITE);
         generateReportButton.setFocusPainted(false);
         generateReportButton.setFont(new Font("Arial", Font.BOLD, 14));
         controlPanel.add(generateReportButton);
+
+        // Bouton "Rafraîchir"
+        JButton refreshButton = new JButton("Rafraîchir");
+        refreshButton.setBackground(new Color(0x4CAF50)); // Couleur verte
+        refreshButton.setForeground(Color.WHITE);
+        refreshButton.setFocusPainted(false);
+        refreshButton.setFont(new Font("Arial", Font.BOLD, 14));
+        controlPanel.add(refreshButton);
 
         add(controlPanel, BorderLayout.SOUTH);
 
