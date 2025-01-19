@@ -36,8 +36,8 @@ public class ControllerTests {
         String booksFilePath = loadResourcePath("data/books.csv");
         String usersFilePath = loadResourcePath("data/users.csv");
 
-        EmpruntDAO empruntDAO = new EmpruntDAO(empruntFilePath);
-        LivreDAO livreDAO = new LivreDAO(booksFilePath);
+        new EmpruntDAO(empruntFilePath);
+        new LivreDAO(booksFilePath);
         UserDAO userDAO = new UserDAO(usersFilePath);
 
         EmpruntView empruntView = new EmpruntView();
@@ -52,8 +52,7 @@ public class ControllerTests {
 
     @Test
     public void testAjouterEmprunt() {
-        // Créer un nouvel emprunt
-        Emprunt emprunt = new Emprunt(1, 1, "user1", LocalDate.now(), LocalDate.now().plusDays(7), LocalDate.now().plusDays(7),false, 0);
+        new Emprunt(1, 1, "user1", LocalDate.now(), LocalDate.now().plusDays(7), LocalDate.now().plusDays(7),false, 0);
         Emprunt emprunt1 = new Emprunt(2, 1, "user1", LocalDate.now(), LocalDate.now().plusDays(7), LocalDate.now().plusDays(7),false, 5);
 
         // Vérifier que l'ajout de l'emprunt ne lance pas d'exception
@@ -64,8 +63,7 @@ public class ControllerTests {
 
     @Test
     public void testAjouterLivre() {
-        // Créer un nouveau livre
-        Livre livre = new Livre(1, "Titre Test", "Auteur Test", "Genre Test", 2023, "", "123-456", "Description Test", "Editeur Test", 10);
+        new Livre(1, "Titre Test", "Auteur Test", "Genre Test", 2023, "", "123-456", "Description Test", "Editeur Test", 10);
 
         // Vérifier que l'ajout du livre ne lance pas d'exception
         assertDoesNotThrow(() -> livreController.ajouterLivre());
@@ -75,8 +73,7 @@ public class ControllerTests {
 
     @Test
     public void testAjouterUtilisateur() {
-        // Créer un nouvel utilisateur
-        User user = new User("129393", "Nom Test", "Prenom Test", "email@test.com", "123456789", "password", Role.MEMBRE, true);
+        new User("129393", "Nom Test", "Prenom Test", "email@test.com", "123456789", "password", Role.MEMBRE, true);
 
         // Vérifier que l'ajout de l'utilisateur ne lance pas d'exception
         assertDoesNotThrow(() -> userController.ajouterUtilisateur());
@@ -96,5 +93,6 @@ public class ControllerTests {
             JOptionPane.showMessageDialog(null, "Erreur lors du chargement de la ressource : " + resourceName, "Erreur", JOptionPane.ERROR_MESSAGE);
             return null; // Retourne null si la ressource n'est pas trouvée
         }
+        
     }
 }

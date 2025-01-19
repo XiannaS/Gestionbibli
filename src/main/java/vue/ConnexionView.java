@@ -2,14 +2,19 @@ package vue;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 
-public class ConnexionView extends JPanel {
+public class ConnexionView extends JFrame {
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
 
     public ConnexionView() {
+        setTitle("Connexion");
+        setSize(400, 200);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center the frame on the screen
+
+        // Set layout for the frame
         setLayout(new GridLayout(3, 2, 10, 10));
 
         JLabel usernameLabel = new JLabel("Nom d'utilisateur:");
@@ -37,9 +42,5 @@ public class ConnexionView extends JPanel {
 
     public JButton getLoginButton() {
         return loginButton;
-    }
-
-    public void setLoginButtonListener(ActionListener listener) {
-        loginButton.addActionListener(listener);
     }
 }

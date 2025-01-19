@@ -193,5 +193,20 @@ public class UserDAO {
         return null;  // Aucun utilisateur trouvé ou mot de passe incorrect
     }
 
-
+    public boolean validateUser (String username, String password) {
+        for (User  user : getAllUsers()) {
+            System.out.println("Checking user: " + user.getEmail() + " with password hash: " + user.getMotDePasse());
+            
+            if (user.getEmail().equals(username)) {
+                System.out.println("Email matches!");
+                if (BCrypt.checkpw(password, user.getMotDePasse())) {
+                    System.out.println("Password matches!");
+                    return true; // User found and password matches
+                } else {
+                    System.out.println("Password does not match.");
+                }
+            }
+        }
+        return false; // User not found or password does not match
+    }
 }

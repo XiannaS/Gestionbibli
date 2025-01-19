@@ -33,6 +33,13 @@ public class EmpruntController {
         ajouterEcouteurs();
         chargerEmprunts("Tous");
         
+       
+    }
+ 
+
+    // Ajoutez cette méthode
+    public int getTotalEmprunts() {
+        return empruntModel.listerEmprunts().size(); // Retourne le nombre total d'emprunts
     }
     public List<Emprunt> getEmprunts() {
         return empruntModel.listerEmprunts(); // Retourne la liste des emprunts
@@ -213,6 +220,7 @@ public class EmpruntController {
             JOptionPane.showMessageDialog(empruntView, "Emprunt supprimé avec succès !");
         }
     }
+    
     public void ajouterEmprunt(Emprunt emprunt) {
         // Vérifiez si le livre est disponible avant d'ajouter l'emprunt
         Livre livre = livreDAO.rechercherParID(emprunt.getLivreId());
@@ -265,10 +273,8 @@ public class EmpruntController {
                         && !emprunt.isRendu());
     }
 
-    public List<Emprunt> getEmpruntsByYear(int year) {
-        return empruntModel.listerEmprunts().stream() // Utiliser le modèle pour obtenir la liste des emprunts
-                .filter(e -> e.getDateEmprunt().getYear() == year)
-                .collect(Collectors.toList());
-    }
+   
+  
+ 
 
 }

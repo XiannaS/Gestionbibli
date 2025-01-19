@@ -177,35 +177,34 @@ public class UserController {
     }
 
 
-    /**
-     * Récupère le nombre d'utilisateurs inactifs.
-     * @return Le nombre d'utilisateurs inactifs.
-     */
-    public int getNombreUtilisateursInactifs() {
-        return Math.toIntExact(userDAO.getAllUsers().stream().filter(user -> !user.isStatut()).count());
-    }
-
-    /**
-     * Récupère le nombre d'utilisateurs actifs.
-     * @return Le nombre d'utilisateurs actifs.
-     */
-    public int getNombreUtilisateursActifs() {
-        return Math.toIntExact(userDAO.getAllUsers().stream().filter(User::isStatut).count());
-    }
 
     /**
      * Met à jour l'affichage des utilisateurs dans la vue.
      */
+    /**
+     * Met à jour l'affichage des utilisateurs dans la vue.
+     * L'administrateur est exclu de la liste.
+     */
     public void displayUsers() {
-        List<User> users = userDAO.getAllUsers();
+        List<User> users = userDAO.getAllUsers()
+            .stream()
+            .filter(user -> !user.getRole().equals(Role.ADMINISTRATEUR)) // Exclure l'administrateur
+            .collect(Collectors.toList());
+        
         userView.displayUsers(users);
     }
     
-    // Méthode pour obtenir les utilisateurs actifs
-    public List<User> getActiveUsers() {
-        return userDAO.getAllUsers().stream()
-                .filter(User::isStatut) // Filtrer les utilisateurs actifs
-                .collect(Collectors.toList());
+    public List<User> getAllUsers() {
+        return userDAO.getAllUsers();
     }
- 
+
+    public int getNombreUtilisateursActifs() {
+        return (int) userDAO.getAllUsers().stream()
+                .filter(User::isStatut) // Filtrer les utilisateurs actifs
+                .count();
+    }
+
+    public int getTotalUsers() {
+        return userDAO.getAllUsers().size();
+    }
 }

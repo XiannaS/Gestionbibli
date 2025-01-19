@@ -8,7 +8,7 @@ import java.util.Random;
 
 public class AdminUserManager {
 
-    private final String fichierCSV = "src/main/resources/ressources/users.csv"; // Chemin vers le fichier CSV
+    private final String fichierCSV = "src/main/resources/data/users.csv"; // Chemin vers le fichier CSV
 
     /**
      * Ajoute un utilisateur avec le rôle Administrateur dans le fichier users.csv.
@@ -38,10 +38,11 @@ public class AdminUserManager {
             newId = generateRandomId(4);
         } while (idExists(newId)); // Vérifiez que l'ID n'existe pas déjà
 
-        // Création de l'utilisateur Administrateur
-        User admin = new User(newId, nom, prenom, email, numeroTel, hashMotDePasse(motDePasse), Role.ADMINISTRATEUR, false);
+        // Création de l'utilisateur Administrateur avec statut à true
+        User admin = new User(newId, nom, prenom, email, numeroTel, hashMotDePasse(motDePasse), Role.ADMINISTRATEUR, true); // Set status to true
 
         // Ajout de l'utilisateur dans le fichier CSV
+        String hashedPassword = hashMotDePasse(motDePasse);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fichierCSV, true))) {
             StringBuilder sb = new StringBuilder();
             sb.append(admin.getId()).append(",")
@@ -50,7 +51,8 @@ public class AdminUserManager {
               .append(admin.getEmail()).append(",")
               .append(admin.getNumeroTel()).append(",")
               .append(admin.getMotDePasse()).append(",")
-              .append(admin.getRole());
+              .append(admin.getRole()).append(",") // Add role
+              .append(admin.isStatut()); // Add status
             writer.write(sb.toString());
             writer.newLine();
             JOptionPane.showMessageDialog(null, "Administrateur ajouté avec succès !");

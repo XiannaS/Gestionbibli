@@ -1,23 +1,10 @@
 package vue;
 
-import controllers.EmpruntController;
-import controllers.LivreController;
-import controllers.UserController;
-import controllers.DashboardController;
-import model.UserDAO;
-
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-
 import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.intellijthemes.FlatDraculaIJTheme;
+import java.awt.*;
+import java.io.IOException;
+import java.net.URL;
 
 public class BibliothequeApp extends JFrame {
     private static final long serialVersionUID = 1L;
@@ -41,30 +28,9 @@ public class BibliothequeApp extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Initialisation des vues
-        LivreView livreView = new LivreView();
-        EmpruntView empruntView = new EmpruntView();
-        UserView userView = new UserView();
-        DashboardView dashboardView = new DashboardView();
-
-        // Chargement des fichiers CSV en tant que ressources
-        String empruntFilePath = loadResourcePath("data/emprunt.csv");
-        String booksFilePath = loadResourcePath("data/books.csv");
-        String usersFilePath = loadResourcePath("data/users.csv");
-
-        // Initialisation des contrôleurs
-     // Initialisation des contrôleurs
-        UserDAO userDAO = new UserDAO(usersFilePath);
-        EmpruntController empruntController = new EmpruntController(empruntView, empruntFilePath, booksFilePath, usersFilePath);
-        LivreController livreController = new LivreController(livreView, booksFilePath, empruntController);
-        UserController userController = new UserController(userView, userDAO);
-        DashboardController dashboardController = new DashboardController(dashboardView, empruntController, livreController, userController, userDAO); // Ajout de userDAO ici
         // Création du panneau d'onglets
-        tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Livres", livreView);
-        tabbedPane.addTab("Utilisateurs", userView);
-        tabbedPane.addTab("Emprunts", empruntView);
-        tabbedPane.addTab("Dashboard", dashboardView);
+        tabbedPane = new JTabbedPane(JTabbedPane.LEFT);
+        add(tabbedPane, BorderLayout.CENTER);
 
         // Création du header
         JPanel headerPanel = new JPanel(new BorderLayout());
@@ -100,7 +66,7 @@ public class BibliothequeApp extends JFrame {
         // Message de bienvenue sous l'avatar
         welcomeLabel = new JLabel("Bienvenue !");
         welcomeLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        welcomeLabel.setForeground(Color.BLACK); // Couleur de texte par défaut // Ajuster le texte sous l'avatar en réduisant l'espace
+        welcomeLabel.setForeground(Color.BLACK); // Couleur de texte par défaut
         welcomePanel.add(Box.createVerticalStrut(5));  // Espace entre l'avatar et le texte
         welcomePanel.add(welcomeLabel);
 
@@ -120,12 +86,10 @@ public class BibliothequeApp extends JFrame {
         // Ajouter le panneau principal dans le headerPanel, en le collant à gauche
         headerPanel.add(topPanel, BorderLayout.WEST);
 
-        // Ajouter les boutons de notification, profil et toggle theme
+        // Initialisation des boutons de notification, profil et toggle theme
         notificationButton = new JButton(loadIcon("notification.png"));
         profileButton = new JButton(loadIcon("profile.png"));
         toggleThemeButton = new JButton(loadIcon("mode.png"));
-
-        toggleThemeButton.addActionListener(this::toggleTheme);
 
         // Panneau pour les boutons à droite
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -137,44 +101,8 @@ public class BibliothequeApp extends JFrame {
         // Ajouter le panneau de boutons à droite dans le headerPanel
         headerPanel.add(buttonPanel, BorderLayout.EAST);
 
-        // Ajouter le headerPanel et le tabbedPane à la fenêtre
+        // Ajouter le headerPanel à la fenêtre
         add(headerPanel, BorderLayout.NORTH);
-        add(tabbedPane, BorderLayout.CENTER);
-    }
-
-    private String loadResourcePath(String resourceName) {
-        try {
-            // Utilisation de getResource pour obtenir le chemin de la ressource
-            String path = getClass().getClassLoader().getResource(resourceName).toURI().getPath();
-            
-            // Vérifiez si le fichier existe
-            File file = new File(path);
-            if (!file.exists()) {
-                // Si le fichier n'existe pas, créez-le avec les en-têtes appropriés
-                createCsvFile(file);
-            }
-            
-            return path;
-        } catch (Exception e) {
-            // Ne pas afficher de message d'erreur, juste retourner null
-            return null; // Retourne null si la ressource n'est pas trouvée
-        }
-    }
-
-    private void createCsvFile(File file) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            // Écrire les en-têtes dans le fichier CSV
-            if (file.getName().equals("emprunt.csv")) {
-                writer.write("id;livreId;userId;dateEmprunt;dateRetourPrevue;dateRetourEffective;rendu;penalite;nombreRenouvellements");
-            } else if (file.getName().equals("books.csv")) {
-                writer.write("id;titre;auteur;genre;anneePublication;imageUrl;isbn;description;editeur;totalExemplaires");
-            } else if (file.getName().equals("users.csv")) {
-                writer.write("id;nom;prenom;email;numeroTel;motDePasse;role;statut");
-            }
-            writer.newLine(); // Ajouter une nouvelle ligne après les en-têtes
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Erreur lors de la création du fichier : " + file.getName(), "Erreur", JOptionPane.ERROR_MESSAGE);
-        }
     }
 
     // Méthode pour charger les icônes en toute sécurité
@@ -194,32 +122,32 @@ public class BibliothequeApp extends JFrame {
         }
     }
 
-    // Méthode pour charger les fichiers CSV en tant que ressources
-    private InputStream loadResourceStream(String resourceName) {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourceName);
-        if (inputStream == null) {
-            JOptionPane.showMessageDialog(this, "Erreur lors du chargement de la ressource : " + resourceName, "Erreur", JOptionPane.ERROR_MESSAGE);
-        }
-        return inputStream;
+    // Getters pour les boutons
+    public JButton getToggleThemeButton() {
+        return toggleThemeButton;
     }
 
-    // Bascule entre le mode sombre et le mode clair
-    private void toggleTheme(ActionEvent event) {
-        try {
-            // Basculer entre les thèmes clair et sombre
-            if (isDarkMode) {
-                UIManager.setLookAndFeel(new FlatLightLaf());
-                isDarkMode = false;
-            } else {
-                UIManager.setLookAndFeel(new FlatDraculaIJTheme());
-                isDarkMode = true;
-            }
-            // Mettre à jour l'interface graphique immédiatement après le changement de thème
-            SwingUtilities.updateComponentTreeUI(this);
-        } catch (UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
-        }
+    public JButton getProfileButton() {
+        return profileButton;
     }
 
-  
+    public JButton getNotificationButton() {
+        return notificationButton;
+    }
+
+    public JTabbedPane getTabbedPane() {
+        return tabbedPane;
+    }
+
+    public JLabel getWelcomeLabel() {
+        return welcomeLabel;
+    }
+
+    public boolean isDarkMode() {
+        return isDarkMode;
+    }
+
+    public void setDarkMode(boolean isDarkMode) {
+        this.isDarkMode = isDarkMode;
+    }
 }
